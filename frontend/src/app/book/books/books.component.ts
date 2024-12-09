@@ -1,12 +1,13 @@
 import {Component, OnInit} from '@angular/core';
-import {Book, GetPaginatedBooksGQL, GetPaginatedBooksQuery} from '../../../graphql/generated';
+import {Book} from '../../../graphql/generated';
 import {MatList, MatListItem, MatListItemLine, MatListItemTitle} from '@angular/material/list';
 import {ArtworkComponent} from '../../cover/artwork/artwork.component';
 import {RouterLink} from '@angular/router';
 import {PercentPipe} from '@angular/common';
 import {MatDivider} from '@angular/material/divider';
-import {Observable} from 'rxjs';
-import {map} from 'rxjs/operators';
+import {BooksService} from './books.service';
+import {MatPaginator, PageEvent} from '@angular/material/paginator';
+import {VoteOptionComponent} from '../votes/vote-option/vote-option.component';
 
 @Component({
   selector: 'app-books',
@@ -18,32 +19,45 @@ import {map} from 'rxjs/operators';
     PercentPipe,
     MatDivider,
     MatListItemLine,
-    MatListItemTitle
+    MatListItemTitle,
+    MatPaginator,
+    VoteOptionComponent
   ],
   templateUrl: './books.component.html',
   standalone: true,
   styleUrl: './books.component.scss'
 })
 export class BooksComponent implements OnInit {
-    books: [Book] | undefined;
-    pagedList: Observable<GetPaginatedBooksQuery['paginatedBooks']> | undefined;
-    constructor(private getPaginatedBooksGQL : GetPaginatedBooksGQL) { }
+  books: Book[] = [];
+  pages: number = 0;
+  pageSize: number = 10;
+  totalItems: number = 0;
+  currentPage: number = 0;
+
+  constructor(private bookService: BooksService) {
+  }
 
   ngOnInit(): void {
-      this.pagedList = this.getPaginatedBooksGQL.watch({
-        limit: 10,
-        page: 0
-      }).valueChanges.pipe(map(result=>result.data?.paginatedBooks));
-      this.pagedList.subscribe({
-        next: (data) => {
-          this.books = data?.books as [Book];
-        },
-        error: (error) => {
-          console.log(error);
-        },
-        complete: () => {
-          console.log('complete');
+    this.updateList();
+  }
+
+  updateList(): void {
+    const topList = this.bookService.getUnfinishedBooks(this.pageSize, this.currentPage);
+    topList.then(books => {
+        this.totalItems = books.total;
+        this.pages = Math.ceil(books.total / this.pageSize);
+        this.books = [];
+        for (var book of books.books) {
+          if (book) {
+            this.books.push(book);
+          }
         }
-      });
+      }
+    )
+  }
+
+  handlePageEvent(e: PageEvent) {
+     this.currentPage = e.pageIndex;
+     this.updateList();
   }
 }

@@ -80,13 +80,14 @@ export type LoginResponse = {
   code: Scalars['Int']['output'];
   message: Scalars['String']['output'];
   success: Scalars['Boolean']['output'];
-  token: Scalars['String']['output'];
+  token?: Maybe<Scalars['String']['output']>;
 };
 
 export type Mutation = {
   __typename?: 'Mutation';
   addBook?: Maybe<BookMutationResponse>;
   addComment?: Maybe<CommentMutationResponse>;
+  deleteVoteForUserAndBook?: Maybe<DeleteMutationResponse>;
   finalizeVote?: Maybe<FinaliseVoteMutationResponse>;
   register?: Maybe<UserMutationResponse>;
   removeBook?: Maybe<DeleteMutationResponse>;
@@ -111,6 +112,11 @@ export type MutationAddCommentArgs = {
   bookId: Scalars['ID']['input'];
   text: Scalars['String']['input'];
   userId: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteVoteForUserAndBookArgs = {
+  bookId: Scalars['ID']['input'];
 };
 
 
@@ -421,6 +427,13 @@ export type VoteOnBookMutationVariables = Exact<{
 
 export type VoteOnBookMutation = { __typename?: 'Mutation', voteOnBook?: { __typename?: 'VoteMutationResponse', code: number, success: boolean, message: string, voteId: string, vote: { __typename?: 'Vote', id: string, approve: boolean, book: { __typename?: 'Book', id: string, title?: string | null, author?: string | null } } } | null };
 
+export type DeleteVoteForUserAndBookMutationVariables = Exact<{
+  bookId: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteVoteForUserAndBookMutation = { __typename?: 'Mutation', deleteVoteForUserAndBook?: { __typename?: 'DeleteMutationResponse', code: number, success: boolean, message: string } | null };
+
 export type FinalizeVoteMutationVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -437,7 +450,7 @@ export type LoginUserQueryVariables = Exact<{
 }>;
 
 
-export type LoginUserQuery = { __typename?: 'Query', loginToken?: { __typename?: 'LoginResponse', code: number, success: boolean, message: string, token: string } | null };
+export type LoginUserQuery = { __typename?: 'Query', loginToken?: { __typename?: 'LoginResponse', code: number, success: boolean, message: string, token?: string | null } | null };
 
 export type GetPaginatedUsersQueryVariables = Exact<{
   limit: Scalars['Int']['input'];
@@ -856,6 +869,26 @@ export const VoteOnBookDocument = gql`
   })
   export class VoteOnBookGQL extends Apollo.Mutation<VoteOnBookMutation, VoteOnBookMutationVariables> {
     document = VoteOnBookDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const DeleteVoteForUserAndBookDocument = gql`
+    mutation DeleteVoteForUserAndBook($bookId: ID!) {
+  deleteVoteForUserAndBook(bookId: $bookId) {
+    code
+    success
+    message
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class DeleteVoteForUserAndBookGQL extends Apollo.Mutation<DeleteVoteForUserAndBookMutation, DeleteVoteForUserAndBookMutationVariables> {
+    document = DeleteVoteForUserAndBookDocument;
     
     constructor(apollo: Apollo.Apollo) {
       super(apollo);

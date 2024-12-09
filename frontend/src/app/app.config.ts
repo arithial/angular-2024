@@ -8,19 +8,20 @@ import {provideApollo} from 'apollo-angular';
 import {HttpLink} from 'apollo-angular/http';
 import {ApolloLink, InMemoryCache} from '@apollo/client/core';
 import {setContext} from '@apollo/client/link/context';
+import {AUTH_TOKEN_KEY} from '../services/auth.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({eventCoalescing: true}), provideRouter(routes), provideAnimationsAsync(), provideHttpClient(), provideApollo(() => {
       const httpLink = inject(HttpLink);
       const auth = setContext((operation, context) => {
-        const token = localStorage.getItem("auth");
+        const token = sessionStorage.getItem(AUTH_TOKEN_KEY);
         if (token === null) {
           return {};
         } else
           return {
             headers: {
-              Auth: `${token}`
+              auth: `${token}`
             }
           };
       });

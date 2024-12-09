@@ -4,6 +4,17 @@
       <mat-card-title-group>
         <mat-card-title>{{bookDetails?.title}}</mat-card-title>
         <mat-card-subtitle>{{bookDetails?.author}}</mat-card-subtitle>
+        @if(bookDetails?.read)
+        {
+          <mat-card-subtitle>Finished book</mat-card-subtitle>
+        } @else if (bookDetails?.selected)
+        {
+          <mat-card-subtitle>Finished book</mat-card-subtitle>
+        }
+        @else if(userInfo)
+        {
+          <app-vote-option bookId="{{bookDetails?.id}}"></app-vote-option>
+        }
         <mat-divider vertical="vertical"></mat-divider>
         <app-artwork isbn="{{bookDetails?.isbn}}" size="L" title="{{bookDetails?.title}}" ></app-artwork>
       </mat-card-title-group>

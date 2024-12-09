@@ -27,7 +27,10 @@ public class DataFetchersDelegateVoteMutationResponseImpl implements DataFetcher
 
     @Override
     public CompletableFuture<Vote> vote(DataFetchingEnvironment dataFetchingEnvironment, DataLoader<UUID, Vote> dataLoader, VoteMutationResponse origin) {
-        Optional<VoteEntity> vote = voteRepository.findById(origin.getVote().getId());
+        if(origin.getVoteId() == null) {
+            return dataLoader.load(UUID.randomUUID());
+        }
+        Optional<VoteEntity> vote = voteRepository.findById(origin.getVoteId());
         if (vote.isPresent()) {
             return dataLoader.load(vote.get().getId());
         }
@@ -39,6 +42,6 @@ public class DataFetchersDelegateVoteMutationResponseImpl implements DataFetcher
     @Override
     public Vote vote(DataFetchingEnvironment dataFetchingEnvironment, VoteMutationResponse origin) {
 
-        return voteRepository.findById(origin.getVote().getId()).map(util::toVote).orElse(null);
+        return voteRepository.findById(origin.getVoteId()).map(util::toVote).orElse(null);
     }
 }

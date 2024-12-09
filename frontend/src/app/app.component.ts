@@ -1,28 +1,45 @@
-import {Component, OnInit, signal} from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import {Component, effect, OnChanges, OnInit, signal, SimpleChanges, WritableSignal} from '@angular/core';
+import {RouterOutlet} from '@angular/router';
 
 import {MatToolbar, MatToolbarRow} from '@angular/material/toolbar';
 import {MatAnchor} from '@angular/material/button';
 import {MatIcon} from '@angular/material/icon';
+import {AuthService, authSignal} from '../services/auth.service';
 import {User} from '../graphql/generated';
-import {AuthService} from '../services/auth.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet,MatIcon, MatToolbar, MatToolbarRow, MatAnchor],
+  imports: [RouterOutlet, MatIcon, MatToolbar, MatToolbarRow, MatAnchor],
   templateUrl: './app.component.html',
   standalone: true,
   styleUrl: './app.component.scss'
 })
-export class AppComponent implements OnInit{
+
+export class AppComponent {
   title = "BookCover";
-  user: User | null = null;
-  auth = signal(false);
+  curUser: WritableSignal<User | null> = signal(null);
+  authSignal = authSignal;
 
+  constructor(private authService: AuthService) {
+    effect(() => {
+      console.log("effect")
+      if (!authSignal()) {
+        console.log("authSignal")
+        this.curUser.set(null);
+      } else if(!this.curUser()) {
+         this.updateCurUser();
+      }
+    });
+  }
 
-  constructor(private authService: AuthService) {}
+  private updateCurUser() {
+    if (this.authService.isLoggedIn() && this.authSignal()) {
+      console.log("updating");
+      this.curUser.set(this.authService.currentUser());
 
-  ngOnInit(): void {
-    this.auth = this.authService.getAuthSignal();
+    } else {
+      console.log("nulling");
+      this.curUser.set(null);
+    }
   }
 }

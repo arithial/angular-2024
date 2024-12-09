@@ -1,17 +1,18 @@
 <mat-toolbar color="primary">
 
   <mat-toolbar-row>
-    <a mat-button href=""><mat-icon aria-hidden="false" aria-label="Home" fontIcon="book"></mat-icon>BookClub</a>
+    <a mat-button href="">
+      <mat-icon aria-hidden="false" aria-label="Home" fontIcon="book"></mat-icon>
+      BookClub</a>
     <a mat-button href="/books">Books</a>
     <a mat-button href="/finished">Finished Books</a>
-    <a mat-button href="/users">Users</a>
-    @if(!auth())
-    {
+    @if (curUser() && curUser()?.isAdmin) {
+      <a mat-button href="/users">Users</a>
+    }
+    @if (!curUser()) {
       <a mat-button href="/login">Login</a>
       <a mat-button href="/register">Register</a>
-    }
-    @else
-    {
+    } @else {
       <a mat-button href="/logout">Logout</a>
     }
   </mat-toolbar-row>

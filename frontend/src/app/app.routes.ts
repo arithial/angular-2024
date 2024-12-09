@@ -7,6 +7,7 @@ import {LogoutComponent} from './user/logout/logout.component';
 import {RegisterComponent} from './user/register/register.component';
 import {GuestOnlyGuard, LoggedInGuard} from './guards.guard';
 import {NotFoundComponent} from './not-found/not-found.component';
+import {FinishedBooksComponent} from './book/finished-books/finished-books.component';
 
 export const routes: Routes = [
   {path: '', component: FrontComponent},
@@ -15,6 +16,7 @@ export const routes: Routes = [
   {path: 'login', component: LoginComponent, canActivate: [GuestOnlyGuard]},
   {path: 'logout', component: LogoutComponent, canActivate: [LoggedInGuard]},
   {path: 'register', component: RegisterComponent, canActivate: [GuestOnlyGuard]},
+  {path: 'finished', component: FinishedBooksComponent},
   {path: '**',  pathMatch: 'full', component: NotFoundComponent},
   {path: '404', component: NotFoundComponent}
 ];

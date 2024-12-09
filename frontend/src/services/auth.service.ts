@@ -1,9 +1,13 @@
-import {Injectable, signal} from '@angular/core';
-import {LoginUserGQL, LoginUserQuery, RegisterUserGQL, User, UserMutationResponse} from '../graphql/generated';
-import {Router} from '@angular/router';
+import {computed, Injectable, signal, WritableSignal} from '@angular/core';
+import {
+  GetCurrentUserGQL, LoginResponse,
+  LoginUserGQL,
+  RegisterUserGQL, User,
+  UserMutationResponse
+} from '../graphql/generated';
 import {map} from 'rxjs/operators';
 import {HttpStatusCode} from '@angular/common/http';
-import {Observable, of} from 'rxjs';
+import {firstValueFrom, Observable} from 'rxjs';
 
 class ConflictError implements Error {
   constructor(message: string) {
@@ -14,19 +18,21 @@ class ConflictError implements Error {
   name = 'ConflictException';
 }
 
+export const authSignal = signal(false);
+
+export const AUTH_TOKEN_KEY = 'AUTH_TOKEN_KEY';
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly TOKEN_KEY = 'token_Data';
   private readonly USER_DATA_KEY = 'USER_Data';
-  private authSingal = signal(false);
+
 
   constructor(private loginGQL: LoginUserGQL,
               private registerGQL: RegisterUserGQL,
-              private router: Router) {
+              private getUserGQL: GetCurrentUserGQL) {
   }
-
 
 
   private createUser(username: string, email: string, password: string) {
@@ -42,6 +48,7 @@ export class AuthService {
         if (data)
           if (data.success) {
             this.setUserSession(data.user.id);
+            this.setStorageItem(this.USER_DATA_KEY, JSON.stringify(data.user));
           } else if (data.code == HttpStatusCode.Conflict.valueOf()) {
             throw new ConflictError(data.message);
           } else {
@@ -59,52 +66,60 @@ export class AuthService {
     }).pipe(map(result => result.data?.loginToken));
     loginTokenQuery.subscribe(data => {
       if (data)
-        if (data.success) {
+        if (data.success && data.token) {
           this.setUserSession(data.token);
         } else {
 
         }
     })
-    return loginTokenQuery as Observable<LoginUserQuery>
+    return loginTokenQuery as Observable<LoginResponse>
   }
 
   private setUserSession(userId: string) {
 
-    this.setStorageItem(this.TOKEN_KEY, userId);
-    this.authSingal.set(true);
-    this.router.navigate(['/']);
+    this.setStorageItem(AUTH_TOKEN_KEY, userId);
+    this.currentUserPromise().then(result => {
+      this.setStorageItem(this.USER_DATA_KEY, JSON.stringify(result));
+      authSignal.set(true);
+    })
   }
 
   private setStorageItem(key: string, value: string): void {
-    localStorage.setItem(key, value);
     sessionStorage.setItem(key, value);
   }
 
   private removeStorageItem(key: string): void {
-    localStorage.removeItem(key);
     sessionStorage.removeItem(key);
   }
 
   isLoggedIn(): boolean {
     var authToken = this.getToken();
-    return !!authToken;
+    var output = !!authToken;
+    authSignal.set(output);
+    return output;
   }
 
   getToken(): string | null {
-    return sessionStorage.getItem(this.TOKEN_KEY) || localStorage.getItem(this.TOKEN_KEY);
+    return sessionStorage.getItem(AUTH_TOKEN_KEY);
   }
 
   logout(): void {
-    this.removeStorageItem(this.TOKEN_KEY);
+    this.removeStorageItem(AUTH_TOKEN_KEY);
     this.removeStorageItem(this.USER_DATA_KEY);
     sessionStorage.clear();
-    this.router.navigate(['/']);
-    this.authSingal.set(false);
-
+    authSignal.set(false);
   }
 
+  private currentUserPromise() {
+    var result = this.getUserGQL.fetch().pipe(map(result => result.data.currentUser));
+    return firstValueFrom(result as Observable<User>);
+  }
 
-  getAuthSignal() {
-    return this.authSingal;
+  currentUser() {
+    var userData = sessionStorage.getItem(this.USER_DATA_KEY);
+    if(userData) {
+       return JSON.parse(userData) as User
+    }
+    return null;
   }
 }

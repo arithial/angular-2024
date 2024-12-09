@@ -1,6 +1,6 @@
 import {Component, effect, OnInit, signal} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
-import {Comment, Book} from '../../../graphql/generated';
+import {Comment, Book, User} from '../../../graphql/generated';
 import {ArtworkComponent} from '../../cover/artwork/artwork.component';
 import {
   MatCard,
@@ -17,6 +17,8 @@ import {
   MatExpansionPanelTitle
 } from '@angular/material/expansion';
 import {BookDetailsService} from './book-details.service';
+import {AuthService} from '../../../services/auth.service';
+import {VoteOptionComponent} from '../votes/vote-option/vote-option.component';
 
 
 
@@ -33,7 +35,8 @@ import {BookDetailsService} from './book-details.service';
     MatDivider,
     MatExpansionPanel,
     MatExpansionPanelTitle,
-    MatExpansionPanelHeader
+    MatExpansionPanelHeader,
+    VoteOptionComponent
   ],
   templateUrl: './book-details.component.html',
   standalone: true,
@@ -41,6 +44,7 @@ import {BookDetailsService} from './book-details.service';
 })
 export class BookDetailsComponent implements OnInit {
   bookDetails: Book | null = null;
+  userInfo: User | null = null;
   selectedId: string | null = null;
   page: number = 0;
   totalPages: number = 0
@@ -55,28 +59,6 @@ export class BookDetailsComponent implements OnInit {
         if (page.comments && page.comments.length > 0) {
           this.comments.push(...page.comments.map(comment => comment as Comment));
         }
-        this.comments.push({
-          text: "TestComment" + this.random(),
-          user: {
-            username: 'username',
-            email: '',
-            id: ''
-          },
-          book: {
-            __typename: undefined,
-            author: undefined,
-            description: undefined,
-            id: '',
-            isbn: '',
-            rating: undefined,
-            read: undefined,
-            selected: undefined,
-            title: undefined,
-            totalVotes: undefined,
-            userVote: undefined
-          },
-          id: ''
-        });
       })
 
     } else {
@@ -86,25 +68,11 @@ export class BookDetailsComponent implements OnInit {
 
   constructor(private route: ActivatedRoute,
               private router: Router,
-              private bookService: BookDetailsService) {
+              private bookService: BookDetailsService,
+              private authService: AuthService) {
   }
 
-  random() {
-    var length = 10;
-    var randomChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-    var result = '';
-
-    for ( var i = 0; i < length; i++ ) {
-
-      result += randomChars.charAt(Math.floor(Math.random() * randomChars.length));
-
-    }
-
-    return result;
-
-
-  }
 
   ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
@@ -117,6 +85,11 @@ export class BookDetailsComponent implements OnInit {
         (book) => {
           this.bookDetails = book as Book;
         })
+      this.userInfo = this.authService.currentUser();
+    }
+    else
+    {
+      this.router.navigate(['404']);
     }
   }
 

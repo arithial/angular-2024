@@ -68,9 +68,7 @@ public class DataFetchersDelegateMutationImpl implements DataFetchersDelegateMut
         }
         if (!byId.isPresent()) {
             responseBuilder.withCode(HttpStatus.NOT_FOUND.value()).withMessage("User not found").withSuccess(false);
-        }
-        else
-        {
+        } else {
             UserEntity userEntity = byId.get();
             userEntity.setAdmin(admin);
             UserEntity returnedEntity = userRepository.save(userEntity);
@@ -258,6 +256,25 @@ public class DataFetchersDelegateMutationImpl implements DataFetchersDelegateMut
     }
 
     @Override
+    public DeleteMutationResponse deleteVoteForUserAndBook(DataFetchingEnvironment dataFetchingEnvironment, UUID bookId) {
+        DeleteMutationResponse.Builder responseBuilder = new DeleteMutationResponse.Builder();
+        Optional<UserEntity> authUser = getCurrentlyLoggedUser(dataFetchingEnvironment);
+        if (!authUser.isPresent()) {
+            responseBuilder.withCode(HttpStatus.UNAUTHORIZED.value()).withMessage("User not authorized").withSuccess(false);
+        } else {
+            Optional<BookEntity> bookEntity = bookRepository.findById(bookId);
+            if (!bookEntity.isPresent()) {
+                responseBuilder.withCode(HttpStatus.NOT_FOUND.value()).withMessage("Book not found").withSuccess(false);
+            } else {
+                Optional<VoteEntity> existingVote = voteRepository.findByBookAndUser(bookEntity.get(), authUser.get());
+                existingVote.ifPresent(voteEntity -> voteRepository.delete(voteEntity));
+                responseBuilder.withCode(HttpStatus.OK.value()).withMessage("Vote deleted successfully").withSuccess(true);
+            }
+        }
+        return responseBuilder.build();
+    }
+
+    @Override
     public FinaliseVoteMutationResponse finalizeVote(DataFetchingEnvironment dataFetchingEnvironment) {
         FinaliseVoteMutationResponse.Builder responseBuilder = new FinaliseVoteMutationResponse.Builder();
         String currentUser = dataFetchingEnvironment.getGraphQlContext().get(Util.AUTH_KEY);
@@ -276,9 +293,7 @@ public class DataFetchersDelegateMutationImpl implements DataFetchersDelegateMut
             responseBuilder.withCode(HttpStatus.OK.value()).withMessage("Vote finalized successfully").withSuccess(true);
             voteRepository.deleteAll();
 
-        }
-        else
-        {
+        } else {
             responseBuilder.withCode(HttpStatus.FORBIDDEN.value()).withMessage("No approved book found").withSuccess(false);
         }
 
@@ -295,12 +310,9 @@ public class DataFetchersDelegateMutationImpl implements DataFetchersDelegateMut
     }
 
     private BookEntity compareVotes(BookEntity book, BookEntity book1) {
-        if(book.getVotes().stream().filter(VoteEntity::getApproved).count() > book1.getVotes().stream().filter(VoteEntity::getApproved).count())
-        {
+        if (book.getVotes().stream().filter(VoteEntity::getApproved).count() > book1.getVotes().stream().filter(VoteEntity::getApproved).count()) {
             return book;
-        }
-        else
-        {
+        } else {
             return book1;
         }
     }

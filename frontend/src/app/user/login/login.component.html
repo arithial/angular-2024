@@ -1,5 +1,9 @@
 <div>
   <h2>Login</h2>
+  @if(error)
+  {
+      <div class="alert">{{errorMessage}}</div>
+  }
   <form (ngSubmit)="onSubmit()" class="login-form">
     <mat-form-field>
       <mat-label>Username</mat-label>

@@ -3,13 +3,15 @@
     <mat-list-item>
       <div style="display: flex; align-content: center; justify-content: space-between;">
       <app-artwork isbn="{{book.isbn}}" size = "S" title="{{book.title}}"></app-artwork>
+        <div class="mini-spacer"></div>
         <div class="bc-top-list-element">
         <h4 class="bc-title" matListItemTitle>
           <a routerLink="/book/{{book.id}}">{{ book.title }}</a>
         </h4>
         <h5 class="bc-author" matListItemLine>{{ book.author }}</h5>
         </div>
-        <div class="bc-top-list-element"> {{ book.description }}</div>
+        <div class="spacer"></div>
+        <div class="bc-top-list-element"> <app-vote-option [bookId]="book.id"></app-vote-option></div>
       </div>
     </mat-list-item>
     <mat-divider></mat-divider>

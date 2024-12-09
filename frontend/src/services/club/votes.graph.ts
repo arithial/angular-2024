@@ -39,6 +39,18 @@ export const VOTE_ON_BOOK = gql`
   }
 `;
 
+export const DELETE_VOTE_ON_BOOK = gql`
+  mutation DeleteVoteForUserAndBook($bookId: ID!) {
+    deleteVoteForUserAndBook(bookId: $bookId) {
+      code
+      success
+      message
+    }
+  }
+`;
+
+
+
 export const FINALIZE_VOTE = gql`
   mutation FinalizeVote {
     finalizeVote {

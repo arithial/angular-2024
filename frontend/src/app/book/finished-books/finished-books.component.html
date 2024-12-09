@@ -1,0 +1,24 @@
+@if(books && books.length > 0)
+{
+  <mat-grid-list cols="5" rowHeight="5:1">
+  @for (book of books; track book) {
+    <mat-grid-tile><app-display bookId="{{book.id}}" size="L" author="{{book.author}}" title="{{book.title}}" isbn="{{book.isbn}}"></app-display></mat-grid-tile>
+  }
+</mat-grid-list>
+} @else {
+  <mat-card>
+    <mat-card-title-group>
+      <mat-card-subtitle>No books have been finished so far.</mat-card-subtitle>
+    </mat-card-title-group>
+  </mat-card>
+}
+<mat-paginator class="books-paginator"
+               (page)="handlePageEvent($event)"
+               [length]="totalItems"
+               [pageSize]="pageSize"
+               disabled="false"
+               showFirstLastButtons="true"
+               hidePageSize="true"
+               [pageIndex]="currentPage"
+               aria-label="Select page">
+</mat-paginator>

@@ -78,7 +78,7 @@ type LoginResponse {
     code: Int!
     success: Boolean!
     message: String!
-    token: String!
+    token: String
 }
 
 type PaginatedComments {
@@ -141,6 +141,7 @@ type Mutation {
     updateComment(commentId: ID!, newText: String!): CommentMutationResponse
     removeComment(commentId: ID!): DeleteMutationResponse
     voteOnBook(userId: ID!, bookId: ID!, approve: Boolean!): VoteMutationResponse
+    deleteVoteForUserAndBook(bookId: ID!): DeleteMutationResponse
     finalizeVote: FinaliseVoteMutationResponse
 }
 

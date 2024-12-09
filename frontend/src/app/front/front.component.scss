@@ -1,12 +1,19 @@
 .content {
-  display: flex;
   justify-content: space-around;
   width: 100%;
-  max-width: 900px;
+  display: flex;
 }
 
 .divider {
   margin-inline: 0.5rem;
+}
+
+.left-side {
+  width: 100%;
+}
+
+.right-side {
+  width: 100%;
 }
 
 
