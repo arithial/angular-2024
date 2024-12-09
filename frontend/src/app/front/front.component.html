@@ -1,0 +1,28 @@
+<div class="content">
+  <div class="left-side">
+    <mat-card class="example-card" appearance="outlined">
+      <mat-card-header>
+        <mat-card-title >Monthly Read</mat-card-title>
+        <mat-card-subtitle>Book Voted for Next Read</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <app-monthly></app-monthly>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  <mat-divider class="divider" [vertical]="true"></mat-divider>
+  <div class="right-side">
+    <mat-card class="example-card" appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>Top Books</mat-card-title>
+        <mat-card-subtitle>Most voted for next month's read</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <app-top-books class="top-books"></app-top-books>
+      </mat-card-content>
+    </mat-card>
+    <div>
+    </div>
+  </div>
+</div>
+

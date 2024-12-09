@@ -1,0 +1,17 @@
+<mat-list>
+  @for (book of books; track book) {
+    <mat-list-item>
+      <div style="display: flex; align-content: center; justify-content: space-between;">
+      <app-artwork isbn="{{book.isbn}}" size = "S" title="{{book.title}}"></app-artwork>
+        <div class="bc-top-list-element">
+        <h4 class="bc-title" matListItemTitle>
+          <a routerLink="/book/{{book.id}}">{{ book.title }}</a>
+        </h4>
+        <h5 class="bc-author" matListItemLine>{{ book.author }}</h5>
+        </div>
+        <div class="bc-top-list-element"> {{ book.description }}</div>
+      </div>
+    </mat-list-item>
+    <mat-divider></mat-divider>
+  }
+</mat-list>

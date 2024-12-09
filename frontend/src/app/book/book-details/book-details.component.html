@@ -1,0 +1,34 @@
+<div class="container">
+  <mat-card class="example-card" appearance="outlined">
+    <mat-card-header>
+      <mat-card-title-group>
+        <mat-card-title>{{bookDetails?.title}}</mat-card-title>
+        <mat-card-subtitle>{{bookDetails?.author}}</mat-card-subtitle>
+        <mat-divider vertical="vertical"></mat-divider>
+        <app-artwork isbn="{{bookDetails?.isbn}}" size="L" title="{{bookDetails?.title}}" ></app-artwork>
+      </mat-card-title-group>
+    </mat-card-header>
+    <mat-divider></mat-divider>
+    <mat-card-content>
+      {{bookDetails?.description}}
+    </mat-card-content>
+    <mat-expansion-panel (opened)="panelOpenState.set(true)" (closed)="panelOpenState.set(false)">
+      <mat-expansion-panel-header>
+        <mat-panel-title> Comments </mat-panel-title>
+      </mat-expansion-panel-header>
+     @for(comment of comments; track comment)
+     {
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title-group>
+              <mat-card-title>{{comment.user.username}}</mat-card-title>
+            </mat-card-title-group>
+          </mat-card-header>
+          <mat-card-content>
+            {{comment.text}}
+          </mat-card-content>
+        </mat-card>
+     }
+    </mat-expansion-panel>
+  </mat-card>
+</div>
