@@ -34,7 +34,7 @@ public class DataFetchersDelegateBookMutationResponseImpl implements DataFetcher
     }
 
     private Optional<BookEntity> findFromOrigin(BookMutationResponse origin) {
-        return bookRepository.findById(origin.getBook().getId());
+        return bookRepository.findById(origin.getBookId());
     }
 
     @Override

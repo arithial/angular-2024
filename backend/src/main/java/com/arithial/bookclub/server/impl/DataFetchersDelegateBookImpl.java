@@ -1,23 +1,22 @@
 package com.arithial.bookclub.server.impl;
 
-import com.arithial.bookclub.server.Book;
-import com.arithial.bookclub.server.BookDetails;
-import com.arithial.bookclub.server.Comment;
-import com.arithial.bookclub.server.Vote;
+import com.arithial.bookclub.server.*;
 import com.arithial.bookclub.server.jpa.BookEntity;
-import com.arithial.bookclub.server.jpa.CommentEntity;
+import com.arithial.bookclub.server.jpa.UserEntity;
 import com.arithial.bookclub.server.jpa.VoteEntity;
 import com.arithial.bookclub.server.jpa.repository.BookRepository;
-import com.arithial.bookclub.server.jpa.repository.CommentsRepository;
+import com.arithial.bookclub.server.jpa.repository.UserRepository;
 import com.arithial.bookclub.server.jpa.repository.VoteRepository;
 import com.arithial.bookclub.server.util.DataFetchersDelegateBook;
 import graphql.schema.DataFetchingEnvironment;
+import io.micrometer.common.util.StringUtils;
 import jakarta.annotation.Resource;
 import org.dataloader.BatchLoaderEnvironment;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -28,45 +27,48 @@ public class DataFetchersDelegateBookImpl implements DataFetchersDelegateBook {
 
     @Resource
     BookRepository bookRepository;
-    @Resource
-    CommentsRepository commentsRepository;
+
     @Resource
     VoteRepository voteRepository;
+    @Resource
+    UserRepository userRepository;
+
 
     @Override
-    public List<Comment> comments(DataFetchingEnvironment dataFetchingEnvironment, Book origin) {
-        BookEntity bookEntity = bookRepository.findById(origin.getId()).orElse(null);
-        if(bookEntity == null)
-        {
-            return Collections.emptyList();
-        }
-        return util.mapList(commentsRepository.findAllByBook(bookEntity), CommentEntity.class, Comment.class);
-    }
+    public UserVote userVote(DataFetchingEnvironment dataFetchingEnvironment, Book origin) {
 
-    @Override
-    public List<Vote> votes(DataFetchingEnvironment dataFetchingEnvironment, Book origin) {
-
-        BookEntity bookEntity = bookRepository.findById(origin.getId()).orElse(null);
-        if(bookEntity == null)
-        {
-            return Collections.emptyList();
+        String currentUser = dataFetchingEnvironment.getGraphQlContext().get(Util.AUTH_KEY);
+        Optional<UserEntity> authUser;
+        if(StringUtils.isNotEmpty(currentUser)) {
+            authUser = userRepository.findById(UUID.fromString(currentUser));
         }
-        return util.mapList(voteRepository.findByBook(bookEntity), VoteEntity.class, Vote.class);
-    }
-
-    @Override
-    public BookDetails details(DataFetchingEnvironment dataFetchingEnvironment, Book origin) {
-        BookEntity bookEntity = bookRepository.findById(origin.getId()).orElse(null);
-        if(bookEntity == null)
+        else
         {
-            return null;
+            authUser = Optional.empty();
         }
-        return new BookDetails.Builder().withDescription(bookEntity.getDescription()).withRead(bookEntity.getRead()).build();
+        Optional<BookEntity> bookEntity = bookRepository.findById(origin.getId());
+        if(!bookEntity.isPresent())
+        {
+            throw new ResourceNotFoundException("Book not found.");
+        }
+        if(authUser.isPresent())
+        {
+            UserEntity user = authUser.get();
+            Optional<VoteEntity> userVote = voteRepository.findByBookAndUser(bookEntity.get(), user);
+            if(userVote.isPresent())
+            {
+                return new UserVote.Builder().withApprove(userVote.get().getApproved()).build();
+            }
+        }
+        return null;
     }
 
     @Override
     public List<Book> unorderedReturnBatchLoader(List<UUID> keys, BatchLoaderEnvironment environment) {
         Iterable<BookEntity> books = bookRepository.findAllById(keys);
-        return util.mapList(books, BookEntity.class, Book.class);
+        List<BookEntity> bookEntities = new ArrayList<>();
+        books.forEach(bookEntities::add);
+        return bookEntities.stream().map(util::toBook).toList();
+
     }
 }

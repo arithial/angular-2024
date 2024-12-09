@@ -17,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Optional;
@@ -49,11 +50,41 @@ public class DataFetchersDelegateMutationImpl implements DataFetchersDelegateMut
             UserEntity userEntity = new UserEntity();
             userEntity.setUsername(user.getUsername());
             userEntity.setEmail(user.getEmail());
-            userEntity.setPassword(Base64.getEncoder().encodeToString(user.getPassword().getBytes()));
+            userEntity.setPassword(Base64.getEncoder().encodeToString(user.getPassword().getBytes(StandardCharsets.UTF_8)));
             UserEntity returnedEntity = userRepository.save(userEntity);
-            responseBuilder.withUser(mapper.map(returnedEntity, User.class)).withMessage("User registered successfully").withCode(HttpStatus.OK.value()).withSuccess(true);
+            responseBuilder.withUserId(returnedEntity.getId()).withUser(mapper.map(returnedEntity, User.class)).withMessage("User registered successfully").withCode(HttpStatus.OK.value()).withSuccess(true);
         }
         return responseBuilder.build();
+    }
+
+    @Override
+    public UserMutationResponse updateUserAdmin(DataFetchingEnvironment dataFetchingEnvironment, UUID userId, Boolean admin) {
+        UserMutationResponse.Builder responseBuilder = new UserMutationResponse.Builder();
+        Optional<UserEntity> authUser = getCurrentlyLoggedUser(dataFetchingEnvironment);
+        Optional<UserEntity> byId = userRepository.findById(userId);
+
+        if (!authUser.isPresent() || !authUser.get().getAdmin()) {
+            responseBuilder.withCode(HttpStatus.UNAUTHORIZED.value()).withMessage("User not authorized").withSuccess(false);
+        }
+        if (!byId.isPresent()) {
+            responseBuilder.withCode(HttpStatus.NOT_FOUND.value()).withMessage("User not found").withSuccess(false);
+        }
+        else
+        {
+            UserEntity userEntity = byId.get();
+            userEntity.setAdmin(admin);
+            UserEntity returnedEntity = userRepository.save(userEntity);
+            responseBuilder.withUserId(returnedEntity.getId()).withUser(mapper.map(returnedEntity, User.class)).withMessage("User updated successfully").withCode(HttpStatus.OK.value()).withSuccess(true);
+        }
+        return null;
+    }
+
+    private Optional<UserEntity> getCurrentlyLoggedUser(DataFetchingEnvironment dataFetchingEnvironment) {
+        String currentUser = dataFetchingEnvironment.getGraphQlContext().get(Util.AUTH_KEY);
+        if (currentUser == null) {
+            return Optional.empty();
+        }
+        return userRepository.findById(UUID.fromString(currentUser));
     }
 
     @Override
@@ -73,7 +104,7 @@ public class DataFetchersDelegateMutationImpl implements DataFetchersDelegateMut
             bookEntity.setIsbn(isbn);
             bookEntity.setCreated(new Date());
             BookEntity returnedEntity = bookRepository.save(bookEntity);
-            responseBuilder.withBook(mapper.map(returnedEntity, Book.class)).withMessage("Book added successfully").withCode(HttpStatus.OK.value()).withSuccess(true);
+            responseBuilder.withBookId(returnedEntity.getId()).withBook(mapper.map(returnedEntity, Book.class)).withMessage("Book added successfully").withCode(HttpStatus.OK.value()).withSuccess(true);
         }
         return responseBuilder.build();
     }
@@ -100,20 +131,20 @@ public class DataFetchersDelegateMutationImpl implements DataFetchersDelegateMut
     @Override
     public UserMutationResponse updateUserPassword(DataFetchingEnvironment dataFetchingEnvironment, UUID userId, String password) {
         UserMutationResponse.Builder responseBuilder = new UserMutationResponse.Builder();
-        String currentUser = dataFetchingEnvironment.getGraphQlContext().get("Auth");
+        String currentUser = dataFetchingEnvironment.getGraphQlContext().get(Util.AUTH_KEY);
         Optional<UserEntity> authUser = userRepository.findById(UUID.fromString(currentUser));
         Optional<UserEntity> byId = userRepository.findById(userId);
 
-        if (!authUser.isPresent() || !(authUser.get().getAdmin() && !StringUtils.equals(userId.toString(), currentUser))) {
+        if (!authUser.isPresent() || !authUser.get().getAdmin() || !StringUtils.equals(userId.toString(), currentUser)) {
             responseBuilder.withCode(HttpStatus.UNAUTHORIZED.value()).withMessage("User not authorized").withSuccess(false);
         } else if (!byId.isPresent()) {
             responseBuilder.withCode(HttpStatus.NOT_FOUND.value()).withMessage("User not found").withSuccess(false);
         } else {
             UserEntity userEntity = byId.get();
             if (userEntity.getUsername().equals(authUser.get().getUsername())) {
-                userEntity.setPassword(Base64.getEncoder().encodeToString(password.getBytes()));
-                userRepository.save(userEntity);
-                responseBuilder.withCode(HttpStatus.OK.value()).withMessage("Password updated successfully").withSuccess(true);
+                userEntity.setPassword(Base64.getEncoder().encodeToString(password.getBytes(StandardCharsets.UTF_8)));
+                UserEntity returnedEntity = userRepository.save(userEntity);
+                responseBuilder.withUser(mapper.map(returnedEntity, User.class)).withUserId(returnedEntity.getId()).withCode(HttpStatus.OK.value()).withMessage("Password updated successfully").withSuccess(true);
             }
         }
 
@@ -123,7 +154,7 @@ public class DataFetchersDelegateMutationImpl implements DataFetchersDelegateMut
     @Override
     public UserMutationResponse updateUserEmail(DataFetchingEnvironment dataFetchingEnvironment, UUID userId, String email) {
         UserMutationResponse.Builder responseBuilder = new UserMutationResponse.Builder();
-        String currentUser = dataFetchingEnvironment.getGraphQlContext().get("Auth");
+        String currentUser = dataFetchingEnvironment.getGraphQlContext().get(Util.AUTH_KEY);
         Optional<UserEntity> authUser = userRepository.findById(UUID.fromString(currentUser));
         Optional<UserEntity> byId = userRepository.findById(userId);
 
@@ -135,8 +166,8 @@ public class DataFetchersDelegateMutationImpl implements DataFetchersDelegateMut
             UserEntity userEntity = byId.get();
             if (userEntity.getUsername().equals(authUser.get().getUsername())) {
                 userEntity.setEmail(email);
-                userRepository.save(userEntity);
-                responseBuilder.withCode(HttpStatus.OK.value()).withMessage("Email updated successfully").withSuccess(true);
+                UserEntity returnedEntity = userRepository.save(userEntity);
+                responseBuilder.withUser(mapper.map(returnedEntity, User.class)).withUserId(returnedEntity.getId()).withCode(HttpStatus.OK.value()).withMessage("Email updated successfully").withSuccess(true);
             }
         }
         return responseBuilder.build();
@@ -158,7 +189,7 @@ public class DataFetchersDelegateMutationImpl implements DataFetchersDelegateMut
             commentEntity.setMessage(text);
             commentEntity.setCreated(new Date());
             CommentEntity returnedEntity = commentsRepository.save(commentEntity);
-            responseBuilder.withComment(mapper.map(returnedEntity, Comment.class)).withMessage("Comment added successfully").withCode(HttpStatus.OK.value()).withSuccess(true);
+            responseBuilder.withCommentId(returnedEntity.getId()).withComment(mapper.map(returnedEntity, Comment.class)).withMessage("Comment added successfully").withCode(HttpStatus.OK.value()).withSuccess(true);
         }
         return responseBuilder.build();
     }
@@ -166,18 +197,18 @@ public class DataFetchersDelegateMutationImpl implements DataFetchersDelegateMut
     @Override
     public CommentMutationResponse updateComment(DataFetchingEnvironment dataFetchingEnvironment, UUID commentId, String newText) {
         CommentMutationResponse.Builder responseBuilder = new CommentMutationResponse.Builder();
-        String currentUser = dataFetchingEnvironment.getGraphQlContext().get("Auth");
+        String currentUser = dataFetchingEnvironment.getGraphQlContext().get(Util.AUTH_KEY);
         Optional<UserEntity> authUser = userRepository.findById(UUID.fromString(currentUser));
         Optional<CommentEntity> byId = commentsRepository.findById(commentId);
         if (!byId.isPresent()) {
             responseBuilder.withCode(HttpStatus.NOT_FOUND.value()).withMessage("Comment not found").withSuccess(false);
-        } else if (!authUser.isPresent() || !(authUser.get().getAdmin() && !StringUtils.equals(byId.get().getUser().getId().toString(), currentUser))) {
+        } else if (!authUser.isPresent() || !authUser.get().getAdmin() || !StringUtils.equals(byId.get().getUser().getId().toString(), currentUser)) {
             responseBuilder.withCode(HttpStatus.UNAUTHORIZED.value()).withMessage("User not authorized").withSuccess(false);
         } else {
             CommentEntity commentEntity = byId.get();
             commentEntity.setMessage(newText);
             CommentEntity returnedEntity = commentsRepository.save(commentEntity);
-            responseBuilder.withComment(mapper.map(returnedEntity, Comment.class)).withMessage("Comment updated successfully").withCode(HttpStatus.OK.value()).withSuccess(true);
+            responseBuilder.withCommentId(returnedEntity.getId()).withComment(mapper.map(returnedEntity, Comment.class)).withMessage("Comment updated successfully").withCode(HttpStatus.OK.value()).withSuccess(true);
         }
         return responseBuilder.build();
     }
@@ -185,12 +216,12 @@ public class DataFetchersDelegateMutationImpl implements DataFetchersDelegateMut
     @Override
     public DeleteMutationResponse removeComment(DataFetchingEnvironment dataFetchingEnvironment, UUID commentId) {
         DeleteMutationResponse.Builder responseBuilder = new DeleteMutationResponse.Builder();
-        String currentUser = dataFetchingEnvironment.getGraphQlContext().get("Auth");
+        String currentUser = dataFetchingEnvironment.getGraphQlContext().get(Util.AUTH_KEY);
         Optional<UserEntity> authUser = userRepository.findById(UUID.fromString(currentUser));
         Optional<CommentEntity> byId = commentsRepository.findById(commentId);
         if (!byId.isPresent()) {
             responseBuilder.withCode(HttpStatus.NOT_FOUND.value()).withMessage("Comment not found").withSuccess(false);
-        } else if (!authUser.isPresent() || !(authUser.get().getAdmin() && !StringUtils.equals(byId.get().getUser().getId().toString(), currentUser))) {
+        } else if (!authUser.isPresent() || !authUser.get().getAdmin() || !StringUtils.equals(byId.get().getUser().getId().toString(), currentUser)) {
             responseBuilder.withCode(HttpStatus.UNAUTHORIZED.value()).withMessage("User not authorized").withSuccess(false);
         } else {
             commentsRepository.deleteById(commentId);
@@ -219,7 +250,7 @@ public class DataFetchersDelegateMutationImpl implements DataFetchersDelegateMut
                 voteEntity.setUser(byId.get());
                 voteEntity.setApproved(approve);
                 VoteEntity returnedEntity = voteRepository.save(voteEntity);
-                responseBuilder.withVote(mapper.map(returnedEntity, Vote.class)).withMessage("Vote added successfully").withCode(HttpStatus.OK.value()).withSuccess(true);
+                responseBuilder.withVoteId(returnedEntity.getId()).withVote(mapper.map(returnedEntity, Vote.class)).withMessage("Vote added successfully").withCode(HttpStatus.OK.value()).withSuccess(true);
             }
 
         }
@@ -227,40 +258,50 @@ public class DataFetchersDelegateMutationImpl implements DataFetchersDelegateMut
     }
 
     @Override
-    public BookMutationResponse completeBookClubVote(DataFetchingEnvironment dataFetchingEnvironment, UUID bookId) {
-        BookMutationResponse.Builder responseBuilder = new BookMutationResponse.Builder();
-        Optional<BookEntity> byId = bookRepository.findById(bookId);
-        if (!byId.isPresent()) {
-            responseBuilder.withCode(HttpStatus.NOT_FOUND.value()).withMessage("Book not found").withSuccess(false);
-        } else if (byId.get().getComplete() || byId.get().getRead()) {
-            responseBuilder.withCode(HttpStatus.CONFLICT.value()).withMessage("Book voting already completed").withSuccess(false);
-        } else {
-            BookEntity bookEntity = byId.get();
+    public FinaliseVoteMutationResponse finalizeVote(DataFetchingEnvironment dataFetchingEnvironment) {
+        FinaliseVoteMutationResponse.Builder responseBuilder = new FinaliseVoteMutationResponse.Builder();
+        String currentUser = dataFetchingEnvironment.getGraphQlContext().get(Util.AUTH_KEY);
+        Optional<UserEntity> authUser = userRepository.findById(UUID.fromString(currentUser));
+        if (!authUser.isPresent() || authUser.get().getAdmin() == null || !authUser.get().getAdmin()) {
+            responseBuilder.withCode(HttpStatus.UNAUTHORIZED.value()).withMessage("User not authorized").withSuccess(false);
+        }
+
+        Optional<BookEntity> book = bookRepository.findUnfinishedBookEntitiesByVoteCount().stream().reduce(this::compareVotes);
+        if (book.isPresent()) {
+            cleanOldStatus();
+            BookEntity bookEntity = book.get();
             bookEntity.setComplete(true);
-            BookEntity returnedEntity = bookRepository.save(bookEntity);
-            responseBuilder.withBook(mapper.map(returnedEntity, Book.class)).withMessage("Book completed successfully").withCode(HttpStatus.OK.value()).withSuccess(true);
+            bookRepository.save(bookEntity);
+
+            responseBuilder.withCode(HttpStatus.OK.value()).withMessage("Vote finalized successfully").withSuccess(true);
+            voteRepository.deleteAll();
+
+        }
+        else
+        {
+            responseBuilder.withCode(HttpStatus.FORBIDDEN.value()).withMessage("No approved book found").withSuccess(false);
         }
 
         return responseBuilder.build();
     }
 
-    @Override
-    public BookMutationResponse finishMonthlyChoice(DataFetchingEnvironment dataFetchingEnvironment, UUID bookId) {
-        BookMutationResponse.Builder responseBuilder = new BookMutationResponse.Builder();
-        Optional<BookEntity> byId = bookRepository.findById(bookId);
-        if (!byId.isPresent()) {
-            responseBuilder.withCode(HttpStatus.NOT_FOUND.value()).withMessage("Book not found").withSuccess(false);
-        } else if (!byId.get().getComplete()) {
-            responseBuilder.withCode(HttpStatus.CONFLICT.value()).withMessage("Book voting not completed").withSuccess(false);
-        } else if (byId.get().getRead()) {
-            responseBuilder.withCode(HttpStatus.CONFLICT.value()).withMessage("Book already finished").withSuccess(false);
-        } else {
-            BookEntity bookEntity = byId.get();
-            bookEntity.setComplete(true);
-            BookEntity returnedEntity = bookRepository.save(bookEntity);
-            responseBuilder.withBook(mapper.map(returnedEntity, Book.class)).withMessage("Book completed successfully").withCode(HttpStatus.OK.value()).withSuccess(true);
+    private void cleanOldStatus() {
+        Optional<BookEntity> currentSelection = bookRepository.findMonthly();
+        if (currentSelection.isPresent()) {
+            BookEntity bookEntity = currentSelection.get();
+            bookEntity.setRead(true);
+            bookRepository.save(bookEntity);
         }
+    }
 
-        return responseBuilder.build();
+    private BookEntity compareVotes(BookEntity book, BookEntity book1) {
+        if(book.getVotes().stream().filter(VoteEntity::getApproved).count() > book1.getVotes().stream().filter(VoteEntity::getApproved).count())
+        {
+            return book;
+        }
+        else
+        {
+            return book1;
+        }
     }
 }

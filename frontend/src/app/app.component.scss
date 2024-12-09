@@ -1,0 +1,15 @@
+main {
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  justify-content: center;
+  box-sizing: inherit;
+  position: relative;
+}
+
+@media screen and (max-width: 650px) {
+  .content {
+    flex-direction: column;
+    width: max-content;
+  }
+}

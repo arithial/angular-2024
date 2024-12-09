@@ -9,6 +9,7 @@ import graphql.schema.DataFetchingEnvironment;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -19,9 +20,13 @@ public class DataFetchersDelegatePaginatedUsersImpl implements DataFetchersDeleg
     UserRepository userRepository;
     @Resource
     Util util;
+
     @Override
     public List<User> users(DataFetchingEnvironment dataFetchingEnvironment, PaginatedUsers origin) {
         List<UUID> userUUIDs = origin.getUsers().stream().map(User::getId).collect(Collectors.toList());
-        return util.mapList(userRepository.findAllById(userUUIDs), UserEntity.class, User.class);
+        Iterable<UserEntity> allById = userRepository.findAllById(userUUIDs);
+        List<UserEntity> users = new ArrayList<>();
+        allById.forEach(users::add);
+        return users.stream().map(util::toUser).toList();
     }
 }

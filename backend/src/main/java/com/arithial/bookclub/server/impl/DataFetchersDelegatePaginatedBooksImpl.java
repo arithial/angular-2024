@@ -9,6 +9,7 @@ import graphql.schema.DataFetchingEnvironment;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -24,9 +25,10 @@ public class DataFetchersDelegatePaginatedBooksImpl implements DataFetchersDeleg
 
     @Override
     public List<Book> books(DataFetchingEnvironment dataFetchingEnvironment, PaginatedBooks origin) {
-
+        List<BookEntity> books = new ArrayList<>();
         Iterable<BookEntity> allById = bookRepository.findAllById(getBookIds(origin));
-        return util.mapList(allById, BookEntity.class, Book.class);
+        allById.forEach(books::add);
+        return books.stream().map(util::toBook).toList();
     }
 
     private static List<UUID> getBookIds(PaginatedBooks origin) {

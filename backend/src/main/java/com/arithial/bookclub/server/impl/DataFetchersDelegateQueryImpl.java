@@ -4,6 +4,7 @@ import com.arithial.bookclub.server.*;
 import com.arithial.bookclub.server.jpa.BookEntity;
 import com.arithial.bookclub.server.jpa.CommentEntity;
 import com.arithial.bookclub.server.jpa.UserEntity;
+import com.arithial.bookclub.server.jpa.VoteEntity;
 import com.arithial.bookclub.server.jpa.repository.BookRepository;
 import com.arithial.bookclub.server.jpa.repository.CommentsRepository;
 import com.arithial.bookclub.server.jpa.repository.UserRepository;
@@ -17,17 +18,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
-import java.util.Base64;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
 public class DataFetchersDelegateQueryImpl implements DataFetchersDelegateQuery {
 
-    @Resource
-    Util util;
     @Resource
     BookRepository bookRepository;
     @Resource
@@ -37,16 +33,15 @@ public class DataFetchersDelegateQueryImpl implements DataFetchersDelegateQuery 
     @Resource
     VoteRepository voteRepository;
     @Resource
-    Mapper mapper;
+    private Util util;
+
     @Override
     public LoginResponse loginToken(DataFetchingEnvironment dataFetchingEnvironment, String username, String password) {
         LoginResponse.Builder builder = LoginResponse.builder();
-        Optional< UserEntity> user = userRepository.findByUsernameAndPassword(username, Base64.getEncoder().encodeToString(password.getBytes()));
-        if(user.isPresent()){
+        Optional<UserEntity> user = userRepository.findByUsernameAndPassword(username, Base64.getEncoder().encodeToString(password.getBytes()));
+        if (user.isPresent()) {
             builder.withCode(HttpStatus.OK.value()).withMessage("Login Successful").withSuccess(true).withToken(user.get().getId().toString());
-        }
-        else
-        {
+        } else {
             builder.withCode(HttpStatus.UNAUTHORIZED.value()).withMessage("Login Failed").withSuccess(false);
         }
         return builder.build();
@@ -54,44 +49,54 @@ public class DataFetchersDelegateQueryImpl implements DataFetchersDelegateQuery 
 
     @Override
     public Book book(DataFetchingEnvironment dataFetchingEnvironment, UUID id) {
-        return bookRepository.findById(id).map(bookEntity -> mapper.map(bookEntity, Book.class)).orElse(null);
+        Optional<UserEntity> loggedUser = getCurrentlyLoggedUser(dataFetchingEnvironment);
+        return bookRepository.findById(id).map(book -> util.toBook(book, loggedUser.orElse(null))).orElse(null);
+    }
+
+
+
+    @Override
+    public List<Book> books(DataFetchingEnvironment dataFetchingEnvironment) {
+        List<BookEntity> books = new ArrayList<>();
+        bookRepository.findAll().forEach(books::add);
+        Optional<UserEntity> loggedUser = getCurrentlyLoggedUser(dataFetchingEnvironment);
+
+        return books.stream().map(book -> util.toBook(book, loggedUser.orElse(null))).collect(Collectors.toList());
     }
 
     @Override
     public User currentUser(DataFetchingEnvironment dataFetchingEnvironment) {
-        String currentUser = dataFetchingEnvironment.getGraphQlContext().get("Auth");
-        Optional<UserEntity> authUser = userRepository.findById(UUID.fromString(currentUser));
-        return authUser.map(userEntity -> mapper.map(userEntity, User.class)).orElse(null);
-    }
-
-    @Override
-    public List<Comment> comments(DataFetchingEnvironment dataFetchingEnvironment) {
-        return util.mapList(commentsRepository.findAll(), CommentEntity.class, Comment.class);
+        Optional<UserEntity> authUser = getCurrentlyLoggedUser(dataFetchingEnvironment);
+        return authUser.map(util::toUser).orElse(null);
     }
 
     @Override
     public PaginatedComments paginatedCommentsByBook(DataFetchingEnvironment dataFetchingEnvironment, UUID bookId, Integer limit, Integer offset) {
         PaginatedComments.Builder builder = PaginatedComments.builder();
         Optional<BookEntity> book = bookRepository.findById(bookId);
-        if(!book.isPresent())
-        {
+        if (!book.isPresent()) {
             return builder.build();
         }
+        Optional<UserEntity> loggedUser = getCurrentlyLoggedUser(dataFetchingEnvironment);
+
         Pageable pageable = Pageable.ofSize(limit).withPage(offset);
         BookEntity bookEntity = book.get();
-        Page<CommentEntity> comments = commentsRepository.findCommentEntitiesByBook(bookEntity,pageable);
-        builder.withBook(mapper.map(bookEntity, Book.class));
+        Page<CommentEntity> comments = commentsRepository.findCommentEntitiesByBook(bookEntity, pageable);
+        builder.withBook(util.toBook(bookEntity, loggedUser.orElse(null)));
         builder.withStartPage(offset);
         builder.withCount(limit);
         builder.withTotal(commentsRepository.countByBook(bookEntity));
-        builder.withComments(util.mapList(comments.getContent(), CommentEntity.class, Comment.class));
+        builder.withComments(comments.getContent().stream().map(util::toComment).collect(Collectors.toList()));
         return builder.build();
     }
 
     @Override
     public List<Book> searchBooksByAuthor(DataFetchingEnvironment dataFetchingEnvironment, String name) {
-        return bookRepository.findByAuthor(name).stream().map(bookEntity -> mapper.map(bookEntity, Book.class)).collect(Collectors.toList());
+        Optional<UserEntity> loggedUser = getCurrentlyLoggedUser(dataFetchingEnvironment);
+
+        return bookRepository.findByAuthor(name).stream().map(util::toBook).collect(Collectors.toList());
     }
+
 
     @Override
     public PaginatedBooks paginatedBooks(DataFetchingEnvironment dataFetchingEnvironment, Integer limit, Integer offset) {
@@ -101,7 +106,7 @@ public class DataFetchersDelegateQueryImpl implements DataFetchersDelegateQuery 
         builder.withStartPage(offset);
         builder.withCount(limit);
         builder.withTotal(bookRepository.getCount());
-        builder.withBooks(util.mapList(books.getContent(), BookEntity.class, Book.class));
+        builder.withBooks(books.getContent().stream().map(util::toBook).collect(Collectors.toList()));
         return builder.build();
     }
 
@@ -113,13 +118,68 @@ public class DataFetchersDelegateQueryImpl implements DataFetchersDelegateQuery 
         builder.withStartPage(offset);
         builder.withCount(limit);
         builder.withTotal(userRepository.getCount());
-        builder.withUsers(util.mapList(users.getContent(), UserEntity.class, User.class));
+        builder.withUsers(users.getContent().stream().map(util::toUser).collect(Collectors.toList()));
         return builder.build();
     }
 
     @Override
-    public List<Book> unfinishedBooks(DataFetchingEnvironment dataFetchingEnvironment) {
+    public PaginatedVotes paginatedUserVotes(DataFetchingEnvironment dataFetchingEnvironment, Integer limit, Integer page) {
 
-        return bookRepository.findUnfinishedBookEntitiesByVoteCount().stream().map(bookEntity -> mapper.map(bookEntity, Book.class)).collect(Collectors.toList());
+        Optional<UserEntity> authUser = getCurrentlyLoggedUser(dataFetchingEnvironment);
+        if(!authUser.isPresent())
+        {
+            throw new UnauthorizedException("Unauthorized");
+        }
+        Pageable pageable = Pageable.ofSize(limit).withPage(page);
+        List<VoteEntity> votes =  voteRepository.findByUser(authUser.get(), pageable);
+        int totalCount = voteRepository.countByUser(authUser.get());
+        PaginatedVotes.Builder builder = PaginatedVotes.builder();
+        builder.withStartPage(page);
+        builder.withCount(limit);
+        builder.withTotal(totalCount);
+        builder.withVotes(votes.stream().map(util::toVote).collect(Collectors.toList()));
+        return builder.build();
+    }
+
+    @Override
+    public PaginatedBooks unfinishedBooks(DataFetchingEnvironment dataFetchingEnvironment, Integer limit, Integer page) {
+        Pageable pageable = Pageable.ofSize(limit).withPage(page);
+        List<BookEntity> unfinished = bookRepository.findUnfinishedBookEntitiesByVoteCount(pageable);
+        int totalCount = bookRepository.countUnfinished();
+        PaginatedBooks.Builder builder = PaginatedBooks.builder();
+        builder.withStartPage(page);
+        builder.withCount(limit);
+        builder.withTotal(totalCount);
+        UserEntity loggedUser = getCurrentlyLoggedUser(dataFetchingEnvironment).orElse(null);
+        builder.withBooks(unfinished.stream().map(book -> util.toBook(book, loggedUser)).collect(Collectors.toList()));
+        return builder.build();
+    }
+
+    @Override
+    public PaginatedBooks finishedBooks(DataFetchingEnvironment dataFetchingEnvironment, Integer limit, Integer page) {
+
+        Pageable pageable = Pageable.ofSize(limit).withPage(page);
+        List<BookEntity> finished = bookRepository.findFinished(pageable);
+        int totalCount = bookRepository.countFinished();
+        PaginatedBooks.Builder builder = PaginatedBooks.builder();
+        builder.withStartPage(page);
+        builder.withCount(limit);
+        builder.withTotal(totalCount);
+        builder.withBooks(finished.stream().map(util::toBook).collect(Collectors.toList()));
+        return builder.build();
+    }
+
+
+    @Override
+    public Book monthlyBook(DataFetchingEnvironment dataFetchingEnvironment) {
+        return bookRepository.findMonthly().map(util::toBook).orElse(null);
+    }
+
+    private Optional<UserEntity> getCurrentlyLoggedUser(DataFetchingEnvironment dataFetchingEnvironment) {
+        String currentUser = dataFetchingEnvironment.getGraphQlContext().get(Util.AUTH_KEY);
+        if (currentUser == null) {
+            return Optional.empty();
+        }
+        return userRepository.findById(UUID.fromString(currentUser));
     }
 }

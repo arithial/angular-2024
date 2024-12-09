@@ -17,8 +17,8 @@ public class BookEntity {
     String title;
     String author;
     String description;
-    Boolean complete;
-    Boolean read;
+    boolean complete;
+    boolean read;
     @OneToMany(mappedBy = "book", fetch = FetchType.LAZY)
     List<CommentEntity> comments;
     @OneToMany(mappedBy = "book", fetch = FetchType.LAZY)

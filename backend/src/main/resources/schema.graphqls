@@ -1,7 +1,23 @@
+scalar Date
+
 interface MutationResponse {
     code: Int!
     success: Boolean!
     message: String!
+}
+
+
+type Book {
+    id: ID!
+    isbn: String!
+    title: String
+    author: String
+    rating: Float
+    totalVotes: Int
+    userVote: UserVote
+    selected: Boolean
+    description: String
+    read: Boolean
 }
 
 type DeleteMutationResponse implements MutationResponse {
@@ -23,9 +39,12 @@ input UserInput {
     password: String!
 }
 
+type UserVote {
+    approve: Boolean!
+}
+
 type Vote {
     id: ID!
-    user: User!
     approve: Boolean!
     book: Book!
 }
@@ -37,33 +56,21 @@ type Comment {
     text: String!
 }
 
-type BookDetails {
-    description: String
-    read: Boolean
-}
 
-type Book {
-    id: ID!
-    isbn: String!
-    title: String
-    author: String
-    comments: [Comment]
-    votes: [Vote]
-    voteComplete: Boolean
-    details: BookDetails
-}
 
 type UserMutationResponse implements MutationResponse {
     code: Int!
     success: Boolean!
     message: String!
-    user: User
+    userId: ID!
+    user: User!
 }
 
 type CommentMutationResponse implements MutationResponse {
     code: Int!
     success: Boolean!
     message: String!
+    commentId: ID!
     comment: Comment!
 }
 
@@ -76,45 +83,56 @@ type LoginResponse {
 
 type PaginatedComments {
     book: Book!
-    comments: [Comment]
+    comments: [Comment]!
     startPage: Int!
     count: Int!
     total: Int!}
 
 type PaginatedBooks {
-    books: [Book]
+    books: [Book]!
     startPage: Int!
     count: Int!
     total: Int!}
 
 type PaginatedUsers {
-    users: [User]
+    users: [User]!
     startPage: Int!
     count: Int!
     total: Int!}
 
-type BookMutationResponse
+type PaginatedVotes {
+    votes: [Vote]!
+    startPage: Int!
+    count: Int!
+    total: Int!}
+
+type BookMutationResponse implements MutationResponse
 {
     code: Int!
     success: Boolean!
     message: String!
+    bookId: ID!
     book: Book!
 }
 
 type Query {
     loginToken(username: String!, password: String!) : LoginResponse
     book(id: ID!): Book
+    books: [Book]!
     currentUser: User
-    comments: [Comment]!
-    paginatedCommentsByBook(bookId: ID!, limit: Int!, offset: Int!): PaginatedComments
+    paginatedCommentsByBook(bookId: ID!, limit: Int!, page: Int!): PaginatedComments
     searchBooksByAuthor(name: String!): [Book]!
-    paginatedBooks(limit: Int!, offset: Int!): PaginatedBooks
-    paginatedUsers(limit: Int!, offset: Int!): PaginatedUsers
-    unfinishedBooks: [Book!]!
+    paginatedBooks(limit: Int!, page: Int!): PaginatedBooks
+    paginatedUsers(limit: Int!, page: Int!): PaginatedUsers
+    paginatedUserVotes(limit: Int!, page: Int!): PaginatedVotes
+    unfinishedBooks(limit: Int!, page: Int!): PaginatedBooks
+    finishedBooks(limit: Int!, page: Int!): PaginatedBooks
+    monthlyBook: Book
 }
 
 type Mutation {
     register(user: UserInput): UserMutationResponse
+    updateUserAdmin(userId: ID!, admin: Boolean!): UserMutationResponse
     addBook(title: String!, author: String!, description: String!, isbn: String!): BookMutationResponse
     removeBook(bookId: ID!): DeleteMutationResponse
     updateUserPassword(userId: ID!, password: String!): UserMutationResponse
@@ -123,13 +141,22 @@ type Mutation {
     updateComment(commentId: ID!, newText: String!): CommentMutationResponse
     removeComment(commentId: ID!): DeleteMutationResponse
     voteOnBook(userId: ID!, bookId: ID!, approve: Boolean!): VoteMutationResponse
-    completeBookClubVote(bookId: ID!): BookMutationResponse
-    finishMonthlyChoice(bookId: ID!): BookMutationResponse
+    finalizeVote: FinaliseVoteMutationResponse
+}
+
+type FinaliseVoteMutationResponse implements MutationResponse
+{
+    code: Int!
+    success: Boolean!
+    message: String!
+    selectedBookId: ID!
+    monthlySelection: Book!
 }
 
 type VoteMutationResponse implements MutationResponse {
     code: Int!
     success: Boolean!
     message: String!
+    voteId: ID!
     vote: Vote!
 }

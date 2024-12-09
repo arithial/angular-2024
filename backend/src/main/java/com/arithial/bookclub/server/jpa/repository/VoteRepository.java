@@ -3,6 +3,7 @@ package com.arithial.bookclub.server.jpa.repository;
 import com.arithial.bookclub.server.jpa.BookEntity;
 import com.arithial.bookclub.server.jpa.UserEntity;
 import com.arithial.bookclub.server.jpa.VoteEntity;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
@@ -23,4 +24,10 @@ public interface VoteRepository extends CrudRepository<VoteEntity, UUID> {
 
     @Query(value = "SELECT COUNT(v) FROM VoteEntity v where v.approved = true and v.book = ?1")
     int countApprovedByBook(BookEntity book);
+
+    @Query(value = "SELECT v FROM VoteEntity v where v.user = ?1")
+    List<VoteEntity> findByUser(UserEntity userEntity, Pageable pageable);
+
+    @Query(value = "SELECT COUNT(v) FROM VoteEntity v where v.user = ?1")
+    int countByUser(UserEntity userEntity);
 }

@@ -14,6 +14,7 @@ import jakarta.annotation.Resource;
 import org.dataloader.DataLoader;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,8 +25,6 @@ public class DataFetchersDelegatePaginatedCommentsImpl implements DataFetchersDe
 
     @Resource
     BookRepository bookRepository;
-    @Resource
-    Mapper mapper;
     @Resource
     Util util;
     @Resource
@@ -48,12 +47,15 @@ public class DataFetchersDelegatePaginatedCommentsImpl implements DataFetchersDe
         if (!bookEntity.isPresent()) {
             return null;
         }
-        return mapper.map(bookEntity.get(), Book.class);
+        return bookEntity.map(util::toBook).orElse(null);
     }
 
     @Override
     public List<Comment> comments(DataFetchingEnvironment dataFetchingEnvironment, PaginatedComments origin) {
         List<UUID> commentIds = origin.getComments().stream().map(Comment::getId).collect(java.util.stream.Collectors.toList());
-        return util.mapList(commentsRepository.findAllById(commentIds), CommentEntity.class, Comment.class);
+        Iterable<CommentEntity> allById = commentsRepository.findAllById(commentIds);
+        List<CommentEntity> comments = new ArrayList<>();
+        allById.forEach(comments::add);
+        return comments.stream().map(util::toComment).collect(java.util.stream.Collectors.toList());
     }
 }

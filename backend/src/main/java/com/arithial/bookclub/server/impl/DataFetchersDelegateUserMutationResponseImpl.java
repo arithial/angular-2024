@@ -21,11 +21,11 @@ public class DataFetchersDelegateUserMutationResponseImpl implements DataFetcher
     @Resource
     UserRepository userRepository;
     @Resource
-    Mapper mapper;
+    Util util;
 
     @Override
     public CompletableFuture<User> user(DataFetchingEnvironment dataFetchingEnvironment, DataLoader<UUID, User> dataLoader, UserMutationResponse origin) {
-        Optional<UserEntity> user = userRepository.findById(origin.getUser().getId());
+        Optional<UserEntity> user = userRepository.findById(origin.getUserId());
         if (user.isPresent()) {
             return dataLoader.load(user.get().getId());
         } else {
@@ -36,7 +36,11 @@ public class DataFetchersDelegateUserMutationResponseImpl implements DataFetcher
     @Override
     public User user(DataFetchingEnvironment dataFetchingEnvironment, UserMutationResponse origin) {
 
-        return userRepository.findById(origin.getUser().getId()).map(userEntity -> mapper.map(userEntity, User.class)).orElse(null);
+        return userRepository.findById(origin.getUserId()).map(this::map).orElse(null);
 
+    }
+
+    private User map(UserEntity userEntity) {
+        return util.toUser(userEntity);
     }
 }

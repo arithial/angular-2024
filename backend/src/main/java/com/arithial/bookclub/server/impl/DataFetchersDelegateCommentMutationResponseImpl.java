@@ -25,7 +25,7 @@ public class DataFetchersDelegateCommentMutationResponseImpl implements DataFetc
 
     @Override
     public CompletableFuture<Comment> comment(DataFetchingEnvironment dataFetchingEnvironment, DataLoader<UUID, Comment> dataLoader, CommentMutationResponse origin) {
-        CommentEntity comment = commentsRepository.findById(origin.getComment().getId()).orElse(null);
+        CommentEntity comment = commentsRepository.findById(origin.getCommentId()).orElse(null);
         if (comment == null) {
             return null;
         }
@@ -34,7 +34,7 @@ public class DataFetchersDelegateCommentMutationResponseImpl implements DataFetc
 
     @Override
     public Comment comment(DataFetchingEnvironment dataFetchingEnvironment, CommentMutationResponse origin) {
-        CommentEntity comment = commentsRepository.findById(origin.getComment().getId()).orElse(null);
+        CommentEntity comment = commentsRepository.findById(origin.getCommentId()).orElse(null);
         if (comment == null) {
             return null;
         }

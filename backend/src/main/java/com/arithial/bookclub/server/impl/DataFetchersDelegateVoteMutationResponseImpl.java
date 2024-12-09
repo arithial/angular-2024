@@ -22,6 +22,8 @@ public class DataFetchersDelegateVoteMutationResponseImpl implements DataFetcher
     Mapper mapper;
     @Resource
     VoteRepository voteRepository;
+    @Resource
+    Util util;
 
     @Override
     public CompletableFuture<Vote> vote(DataFetchingEnvironment dataFetchingEnvironment, DataLoader<UUID, Vote> dataLoader, VoteMutationResponse origin) {
@@ -37,6 +39,6 @@ public class DataFetchersDelegateVoteMutationResponseImpl implements DataFetcher
     @Override
     public Vote vote(DataFetchingEnvironment dataFetchingEnvironment, VoteMutationResponse origin) {
 
-        return voteRepository.findById(origin.getVote().getId()).map(vote -> mapper.map(vote, Vote.class)).orElse(null);
+        return voteRepository.findById(origin.getVote().getId()).map(util::toVote).orElse(null);
     }
 }

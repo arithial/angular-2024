@@ -12,6 +12,7 @@ public class CommentEntity {
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.AUTO)
     UUID id;
 
+    @Column(length = 500)
     String message;
     @ManyToOne
     UserEntity user;

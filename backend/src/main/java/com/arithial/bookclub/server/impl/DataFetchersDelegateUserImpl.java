@@ -8,6 +8,7 @@ import jakarta.annotation.Resource;
 import org.dataloader.BatchLoaderEnvironment;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,6 +24,8 @@ public class DataFetchersDelegateUserImpl implements DataFetchersDelegateUser {
 
     @Override
     public List<User> unorderedReturnBatchLoader(List<UUID> keys, BatchLoaderEnvironment environment) {
-        return util.mapList(userRepository.findAllById(keys), UserEntity.class, User.class);
+        List<UserEntity> users = new ArrayList<>();
+        userRepository.findAllById(keys).forEach(users::add);
+        return users.stream().map(util::toUser).toList();
     }
 }

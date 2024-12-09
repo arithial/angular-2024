@@ -17,6 +17,7 @@ import org.dataloader.BatchLoaderEnvironment;
 import org.dataloader.DataLoader;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -80,7 +81,9 @@ public class DataFetchersDelegateCommentImpl implements DataFetchersDelegateComm
 
     @Override
     public List<Comment> unorderedReturnBatchLoader(List<UUID> keys, BatchLoaderEnvironment environment) {
-        Iterable<CommentEntity> comments = commentsRepository.findAllById(keys);
-        return util.mapList(comments, CommentEntity.class, Comment.class);
+        Iterable<CommentEntity> byId = commentsRepository.findAllById(keys);
+        List<CommentEntity> comments = new ArrayList<>();
+        byId.forEach(comments::add);
+        return comments.stream().map(util::toComment).collect(java.util.stream.Collectors.toList());
     }
 }
