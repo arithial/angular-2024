@@ -9,6 +9,7 @@ export const GET_PAGINATED_COMMENTS_BY_BOOK = gql`
       }
       comments {
         id
+        index
         text
         user {
           id
@@ -18,6 +19,7 @@ export const GET_PAGINATED_COMMENTS_BY_BOOK = gql`
       startPage
       count
       total
+
     }
   }
 `;

@@ -30,12 +30,14 @@ export class BookDetailsService {
     return firstValueFrom(bookQuery as Observable<Book>);
   }
 
-  getCommentsForBook(bookId: string, page: number, limit: number) : Promise<PaginatedComments> {
-    var commentsQuery = this.getComments.fetch({
+  getCommentsForBook(bookId: string, page: number, limit: number) : Observable<PaginatedComments> {
+    var commentsQuery = this.getComments.watch({
       bookId:bookId,
       page:page,
       limit:limit
-    }).pipe(map(result => {return result.data}));
-    return firstValueFrom(commentsQuery as Observable<PaginatedComments>);
+    },{
+      fetchPolicy: "no-cache"
+    }).valueChanges.pipe(map(result => {return result.data.paginatedCommentsByBook}));
+    return commentsQuery as Observable<PaginatedComments>;
   }
 }

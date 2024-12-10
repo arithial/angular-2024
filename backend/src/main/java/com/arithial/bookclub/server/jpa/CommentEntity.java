@@ -23,6 +23,13 @@ public class CommentEntity {
     public CommentEntity() {
     }
 
+    @PrePersist
+    protected void onCreate() {
+        if(created == null) {
+            created = new Date();
+        }
+    }
+
     public UUID getId() {
         return id;
     }

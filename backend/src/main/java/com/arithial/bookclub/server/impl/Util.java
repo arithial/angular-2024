@@ -131,10 +131,15 @@ public class Util {
     }
 
     public Book toBook(BookEntity book) {
-        return toBook(book, null);
+        return toBook(book, null, 0);
+    }
+    public Book toBook(BookEntity book, UserEntity currentUser ) {
+        return toBook(book, currentUser, 0);
+
     }
 
-    public Book toBook(BookEntity book, UserEntity currentUser) {
+
+    public Book toBook(BookEntity book, UserEntity currentUser, int index) {
         Book.Builder builder = new Book.Builder();
         builder.withId(book.getId());
         builder.withIsbn(book.getIsbn());
@@ -143,6 +148,7 @@ public class Util {
         builder.withDescription(book.getDescription());
         builder.withRead(book.getRead());
         builder.withSelected(book.getComplete());
+        builder.withIndex(index);
         List<VoteEntity> votes = voteRepository.findByBook(book);
         int total = votes.size();
         builder.withTotalVotes(total);
@@ -170,18 +176,22 @@ public class Util {
     }
 
     public Comment toComment(CommentEntity commentEntity) {
+        return toComment(commentEntity, 0);
+    }
+    public Comment toComment(CommentEntity commentEntity, int index) {
         Comment.Builder builder = new Comment.Builder();
         builder.withId(commentEntity.getId());
-        builder.withBook(toBook(commentEntity.getBook(), null));
+        builder.withBook(toBook(commentEntity.getBook(), null, 0));
         builder.withUser(toUser(commentEntity.getUser()));
         builder.withText(commentEntity.getMessage());
+        builder.withIndex(index);
         return builder.build();
     }
 
     public Vote toVote(VoteEntity voteEntity) {
         Vote.Builder builder = new Vote.Builder();
         builder.withId(voteEntity.getId());
-        builder.withBook(toBook(voteEntity.getBook(), null));
+        builder.withBook(toBook(voteEntity.getBook(), null, 0));
         builder.withApprove(voteEntity.getApproved());
         return builder.build();
     }

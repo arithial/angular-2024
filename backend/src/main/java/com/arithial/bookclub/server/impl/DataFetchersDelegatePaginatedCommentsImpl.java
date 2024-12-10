@@ -14,11 +14,9 @@ import jakarta.annotation.Resource;
 import org.dataloader.DataLoader;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
 public class DataFetchersDelegatePaginatedCommentsImpl implements DataFetchersDelegatePaginatedComments {
@@ -56,6 +54,7 @@ public class DataFetchersDelegatePaginatedCommentsImpl implements DataFetchersDe
         Iterable<CommentEntity> allById = commentsRepository.findAllById(commentIds);
         List<CommentEntity> comments = new ArrayList<>();
         allById.forEach(comments::add);
-        return comments.stream().map(util::toComment).collect(java.util.stream.Collectors.toList());
+        AtomicInteger index = new AtomicInteger(0);
+        return comments.stream().sorted(Comparator.comparing(CommentEntity::getCreated)).map(comment->util.toComment(comment, index.getAndIncrement())).sorted(Comparator.comparingInt(Comment::getIndex)).collect(java.util.stream.Collectors.toList());
     }
 }

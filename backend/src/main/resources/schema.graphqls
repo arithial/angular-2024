@@ -6,8 +6,13 @@ interface MutationResponse {
     message: String!
 }
 
+interface OrderIndex {
+    index: Int!
+}
 
-type Book {
+
+type Book implements OrderIndex{
+    index: Int!
     id: ID!
     isbn: String!
     title: String
@@ -49,7 +54,8 @@ type Vote {
     book: Book!
 }
 
-type Comment {
+type Comment implements OrderIndex{
+    index: Int!
     id: ID!
     user: User!
     book: Book!

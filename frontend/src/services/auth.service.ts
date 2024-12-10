@@ -1,4 +1,4 @@
-import {computed, Injectable, signal, WritableSignal} from '@angular/core';
+import {computed, Injectable, OnInit, output, signal, WritableSignal} from '@angular/core';
 import {
   GetCurrentUserGQL, LoginResponse,
   LoginUserGQL,
@@ -25,13 +25,15 @@ export const AUTH_TOKEN_KEY = 'AUTH_TOKEN_KEY';
 @Injectable({
   providedIn: 'root'
 })
-export class AuthService {
+export class AuthService  {
   private readonly USER_DATA_KEY = 'USER_Data';
 
 
   constructor(private loginGQL: LoginUserGQL,
               private registerGQL: RegisterUserGQL,
               private getUserGQL: GetCurrentUserGQL) {
+    console.log("init service")
+    authSignal.set(this.isLoggedIn());
   }
 
 
@@ -95,7 +97,6 @@ export class AuthService {
   isLoggedIn(): boolean {
     var authToken = this.getToken();
     var output = !!authToken;
-    authSignal.set(output);
     return output;
   }
 

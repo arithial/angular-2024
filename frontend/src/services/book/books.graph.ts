@@ -57,6 +57,7 @@ export const GET_UNFINISHED_BOOKS = gql`
     unfinishedBooks(limit: $limit, page: $page) {
       books {
         id
+        index
         isbn
         title
         author

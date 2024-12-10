@@ -4,12 +4,13 @@
       <mat-card-title-group>
         <mat-card-title>{{bookDetails?.title}}</mat-card-title>
         <mat-card-subtitle>{{bookDetails?.author}}</mat-card-subtitle>
-        @if(bookDetails?.read)
+        @if(bookDetails?.read == true)
         {
           <mat-card-subtitle>Finished book</mat-card-subtitle>
-        } @else if (bookDetails?.selected)
+        }
+        @else if (bookDetails?.selected == true)
         {
-          <mat-card-subtitle>Finished book</mat-card-subtitle>
+          <mat-card-subtitle>Book of the Month</mat-card-subtitle>
         }
         @else if(userInfo)
         {
@@ -23,23 +24,28 @@
     <mat-card-content>
       {{bookDetails?.description}}
     </mat-card-content>
-    <mat-expansion-panel (opened)="panelOpenState.set(true)" (closed)="panelOpenState.set(false)">
+    <mat-expansion-panel (opened)="panelOpen(true)" (closed)="panelOpen(false)">
       <mat-expansion-panel-header>
         <mat-panel-title> Comments </mat-panel-title>
       </mat-expansion-panel-header>
-     @for(comment of comments; track comment)
+      @if(userInfo)
+      {
+        <app-comment-form (submitted)="refreshComments($event)" bookId="{{bookDetails?.id}}"></app-comment-form>
+      }
+     @for(comment of comments; track comments)
      {
-        <mat-card>
-          <mat-card-header>
-            <mat-card-title-group>
-              <mat-card-title>{{comment.user.username}}</mat-card-title>
-            </mat-card-title-group>
-          </mat-card-header>
-          <mat-card-content>
-            {{comment.text}}
-          </mat-card-content>
-        </mat-card>
+        <app-comment (deletedPressed)="refreshComments($event)" (updatePressed)="updateComment($event)" [comment]="comment"></app-comment>
      }
+      <mat-paginator class="books-paginator"
+                     (page)="handlePageEvent($event)"
+                     [length]="totalItems"
+                     [pageSize]="pageSize"
+                     disabled="false"
+                     showFirstLastButtons="true"
+                     hidePageSize="true"
+                     [pageIndex]="page"
+                     aria-label="Select page">
+      </mat-paginator>
     </mat-expansion-panel>
   </mat-card>
 </div>

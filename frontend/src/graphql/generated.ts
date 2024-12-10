@@ -19,11 +19,12 @@ export type Scalars = {
   Date: { input: any; output: any; }
 };
 
-export type Book = {
+export type Book = OrderIndex & {
   __typename?: 'Book';
   author?: Maybe<Scalars['String']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  index: Scalars['Int']['output'];
   isbn: Scalars['String']['output'];
   rating?: Maybe<Scalars['Float']['output']>;
   read?: Maybe<Scalars['Boolean']['output']>;
@@ -42,10 +43,11 @@ export type BookMutationResponse = MutationResponse & {
   success: Scalars['Boolean']['output'];
 };
 
-export type Comment = {
+export type Comment = OrderIndex & {
   __typename?: 'Comment';
   book: Book;
   id: Scalars['ID']['output'];
+  index: Scalars['Int']['output'];
   text: Scalars['String']['output'];
   user: User;
 };
@@ -169,6 +171,10 @@ export type MutationResponse = {
   code: Scalars['Int']['output'];
   message: Scalars['String']['output'];
   success: Scalars['Boolean']['output'];
+};
+
+export type OrderIndex = {
+  index: Scalars['Int']['output'];
 };
 
 export type PaginatedBooks = {
@@ -345,7 +351,7 @@ export type GetUnfinishedBooksQueryVariables = Exact<{
 }>;
 
 
-export type GetUnfinishedBooksQuery = { __typename?: 'Query', unfinishedBooks?: { __typename?: 'PaginatedBooks', startPage: number, count: number, total: number, books: Array<{ __typename?: 'Book', id: string, isbn: string, title?: string | null, author?: string | null, rating?: number | null, totalVotes?: number | null } | null> } | null };
+export type GetUnfinishedBooksQuery = { __typename?: 'Query', unfinishedBooks?: { __typename?: 'PaginatedBooks', startPage: number, count: number, total: number, books: Array<{ __typename?: 'Book', id: string, index: number, isbn: string, title?: string | null, author?: string | null, rating?: number | null, totalVotes?: number | null } | null> } | null };
 
 export type GetFinishedBooksQueryVariables = Exact<{
   limit: Scalars['Int']['input'];
@@ -384,7 +390,7 @@ export type GetPaginatedCommentsByBookQueryVariables = Exact<{
 }>;
 
 
-export type GetPaginatedCommentsByBookQuery = { __typename?: 'Query', paginatedCommentsByBook?: { __typename?: 'PaginatedComments', startPage: number, count: number, total: number, book: { __typename?: 'Book', id: string, title?: string | null }, comments: Array<{ __typename?: 'Comment', id: string, text: string, user: { __typename?: 'User', id: string, username: string } } | null> } | null };
+export type GetPaginatedCommentsByBookQuery = { __typename?: 'Query', paginatedCommentsByBook?: { __typename?: 'PaginatedComments', startPage: number, count: number, total: number, book: { __typename?: 'Book', id: string, title?: string | null }, comments: Array<{ __typename?: 'Comment', id: string, index: number, text: string, user: { __typename?: 'User', id: string, username: string } } | null> } | null };
 
 export type AddCommentMutationVariables = Exact<{
   userId: Scalars['ID']['input'];
@@ -575,6 +581,7 @@ export const GetUnfinishedBooksDocument = gql`
   unfinishedBooks(limit: $limit, page: $page) {
     books {
       id
+      index
       isbn
       title
       author
@@ -706,6 +713,7 @@ export const GetPaginatedCommentsByBookDocument = gql`
     }
     comments {
       id
+      index
       text
       user {
         id

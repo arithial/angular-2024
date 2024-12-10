@@ -10,7 +10,6 @@ import com.arithial.bookclub.server.jpa.repository.CommentsRepository;
 import com.arithial.bookclub.server.jpa.repository.UserRepository;
 import com.arithial.bookclub.server.jpa.repository.VoteRepository;
 import com.arithial.bookclub.server.util.DataFetchersDelegateQuery;
-import com.github.dozermapper.core.Mapper;
 import graphql.schema.DataFetchingEnvironment;
 import jakarta.annotation.Resource;
 import org.springframework.data.domain.Page;
@@ -19,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Component
@@ -50,9 +50,11 @@ public class DataFetchersDelegateQueryImpl implements DataFetchersDelegateQuery 
     @Override
     public Book book(DataFetchingEnvironment dataFetchingEnvironment, UUID id) {
         Optional<UserEntity> loggedUser = getCurrentlyLoggedUser(dataFetchingEnvironment);
+        if (id == null) {
+            return null;
+        }
         return bookRepository.findById(id).map(book -> util.toBook(book, loggedUser.orElse(null))).orElse(null);
     }
-
 
 
     @Override
@@ -86,7 +88,10 @@ public class DataFetchersDelegateQueryImpl implements DataFetchersDelegateQuery 
         builder.withStartPage(offset);
         builder.withCount(limit);
         builder.withTotal(commentsRepository.countByBook(bookEntity));
-        builder.withComments(comments.getContent().stream().map(util::toComment).collect(Collectors.toList()));
+        AtomicInteger index = new AtomicInteger();
+        List<Comment> commentsList = comments.getContent().stream().sorted(Comparator.comparing(CommentEntity::getCreated)).map(commentEntity -> util.toComment(commentEntity, index.getAndIncrement())).collect(Collectors.toList());
+        builder.withComments(commentsList);
+
         return builder.build();
     }
 
@@ -126,12 +131,11 @@ public class DataFetchersDelegateQueryImpl implements DataFetchersDelegateQuery 
     public PaginatedVotes paginatedUserVotes(DataFetchingEnvironment dataFetchingEnvironment, Integer limit, Integer page) {
 
         Optional<UserEntity> authUser = getCurrentlyLoggedUser(dataFetchingEnvironment);
-        if(!authUser.isPresent())
-        {
+        if (!authUser.isPresent()) {
             throw new UnauthorizedException("Unauthorized");
         }
         Pageable pageable = Pageable.ofSize(limit).withPage(page);
-        List<VoteEntity> votes =  voteRepository.findByUser(authUser.get(), pageable);
+        List<VoteEntity> votes = voteRepository.findByUser(authUser.get(), pageable);
         int totalCount = voteRepository.countByUser(authUser.get());
         PaginatedVotes.Builder builder = PaginatedVotes.builder();
         builder.withStartPage(page);
@@ -151,7 +155,9 @@ public class DataFetchersDelegateQueryImpl implements DataFetchersDelegateQuery 
         builder.withCount(limit);
         builder.withTotal(totalCount);
         UserEntity loggedUser = getCurrentlyLoggedUser(dataFetchingEnvironment).orElse(null);
-        builder.withBooks(unfinished.stream().map(book -> util.toBook(book, loggedUser)).collect(Collectors.toList()));
+        AtomicInteger index = new AtomicInteger(0);
+        List<Book> booksList = unfinished.stream().sorted(Comparator.comparingInt(b -> b.getVotes().size())).map(book -> util.toBook(book, loggedUser, index.getAndIncrement())).collect(Collectors.toList());
+        builder.withBooks(booksList);
         return builder.build();
     }
 
