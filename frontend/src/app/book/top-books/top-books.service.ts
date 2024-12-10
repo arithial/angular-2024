@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import {GetUnfinishedBooksGQL, PaginatedBooks} from '../../../graphql/generated';
 import {map} from 'rxjs/operators';
-import {firstValueFrom} from 'rxjs';
+import {Observable} from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +14,9 @@ export class TopBooksService {
     const topList = this.getUnfinishedBooksGQL.fetch({
       limit: 5,
       page: 0
+    }, {
+      fetchPolicy: "no-cache"
     }).pipe(map(result => result.data.unfinishedBooks));
-    return firstValueFrom(topList) as Promise<PaginatedBooks>;
+    return topList as Observable<PaginatedBooks>;
   }
 }

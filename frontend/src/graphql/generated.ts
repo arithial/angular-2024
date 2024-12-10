@@ -26,11 +26,11 @@ export type Book = OrderIndex & {
   id: Scalars['ID']['output'];
   index: Scalars['Int']['output'];
   isbn: Scalars['String']['output'];
-  rating?: Maybe<Scalars['Float']['output']>;
+  rating: Scalars['Float']['output'];
   read?: Maybe<Scalars['Boolean']['output']>;
   selected?: Maybe<Scalars['Boolean']['output']>;
   title?: Maybe<Scalars['String']['output']>;
-  totalVotes?: Maybe<Scalars['Int']['output']>;
+  totalVotes: Scalars['Int']['output'];
   userVote?: Maybe<UserVote>;
 };
 
@@ -328,7 +328,7 @@ export type GetBookQueryVariables = Exact<{
 }>;
 
 
-export type GetBookQuery = { __typename?: 'Query', book?: { __typename?: 'Book', id: string, isbn: string, title?: string | null, author?: string | null, rating?: number | null, totalVotes?: number | null, selected?: boolean | null, description?: string | null, read?: boolean | null, userVote?: { __typename?: 'UserVote', approve: boolean } | null } | null };
+export type GetBookQuery = { __typename?: 'Query', book?: { __typename?: 'Book', id: string, isbn: string, title?: string | null, author?: string | null, rating: number, totalVotes: number, selected?: boolean | null, description?: string | null, read?: boolean | null, userVote?: { __typename?: 'UserVote', approve: boolean } | null } | null };
 
 export type GetPaginatedBooksQueryVariables = Exact<{
   limit: Scalars['Int']['input'];
@@ -336,14 +336,14 @@ export type GetPaginatedBooksQueryVariables = Exact<{
 }>;
 
 
-export type GetPaginatedBooksQuery = { __typename?: 'Query', paginatedBooks?: { __typename?: 'PaginatedBooks', startPage: number, count: number, total: number, books: Array<{ __typename?: 'Book', id: string, isbn: string, title?: string | null, author?: string | null, rating?: number | null, totalVotes?: number | null } | null> } | null };
+export type GetPaginatedBooksQuery = { __typename?: 'Query', paginatedBooks?: { __typename?: 'PaginatedBooks', startPage: number, count: number, total: number, books: Array<{ __typename?: 'Book', id: string, isbn: string, title?: string | null, author?: string | null, rating: number, totalVotes: number } | null> } | null };
 
 export type SearchBooksByAuthorQueryVariables = Exact<{
   name: Scalars['String']['input'];
 }>;
 
 
-export type SearchBooksByAuthorQuery = { __typename?: 'Query', searchBooksByAuthor: Array<{ __typename?: 'Book', id: string, isbn: string, title?: string | null, author?: string | null, rating?: number | null } | null> };
+export type SearchBooksByAuthorQuery = { __typename?: 'Query', searchBooksByAuthor: Array<{ __typename?: 'Book', id: string, isbn: string, title?: string | null, author?: string | null, rating: number } | null> };
 
 export type GetUnfinishedBooksQueryVariables = Exact<{
   limit: Scalars['Int']['input'];
@@ -351,7 +351,7 @@ export type GetUnfinishedBooksQueryVariables = Exact<{
 }>;
 
 
-export type GetUnfinishedBooksQuery = { __typename?: 'Query', unfinishedBooks?: { __typename?: 'PaginatedBooks', startPage: number, count: number, total: number, books: Array<{ __typename?: 'Book', id: string, index: number, isbn: string, title?: string | null, author?: string | null, rating?: number | null, totalVotes?: number | null } | null> } | null };
+export type GetUnfinishedBooksQuery = { __typename?: 'Query', unfinishedBooks?: { __typename?: 'PaginatedBooks', startPage: number, count: number, total: number, books: Array<{ __typename?: 'Book', id: string, index: number, isbn: string, title?: string | null, author?: string | null, rating: number, totalVotes: number } | null> } | null };
 
 export type GetFinishedBooksQueryVariables = Exact<{
   limit: Scalars['Int']['input'];
@@ -359,12 +359,12 @@ export type GetFinishedBooksQueryVariables = Exact<{
 }>;
 
 
-export type GetFinishedBooksQuery = { __typename?: 'Query', finishedBooks?: { __typename?: 'PaginatedBooks', startPage: number, count: number, total: number, books: Array<{ __typename?: 'Book', id: string, isbn: string, title?: string | null, author?: string | null, rating?: number | null, totalVotes?: number | null } | null> } | null };
+export type GetFinishedBooksQuery = { __typename?: 'Query', finishedBooks?: { __typename?: 'PaginatedBooks', startPage: number, count: number, total: number, books: Array<{ __typename?: 'Book', id: string, isbn: string, title?: string | null, author?: string | null, rating: number, totalVotes: number } | null> } | null };
 
 export type GetMonthlyBookQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetMonthlyBookQuery = { __typename?: 'Query', monthlyBook?: { __typename?: 'Book', id: string, isbn: string, title?: string | null, author?: string | null, rating?: number | null, description?: string | null } | null };
+export type GetMonthlyBookQuery = { __typename?: 'Query', monthlyBook?: { __typename?: 'Book', id: string, isbn: string, title?: string | null, author?: string | null, rating: number, description?: string | null } | null };
 
 export type AddBookMutationVariables = Exact<{
   title: Scalars['String']['input'];
@@ -443,7 +443,7 @@ export type DeleteVoteForUserAndBookMutation = { __typename?: 'Mutation', delete
 export type FinalizeVoteMutationVariables = Exact<{ [key: string]: never; }>;
 
 
-export type FinalizeVoteMutation = { __typename?: 'Mutation', finalizeVote?: { __typename?: 'FinaliseVoteMutationResponse', code: number, success: boolean, message: string, selectedBookId: string, monthlySelection: { __typename?: 'Book', id: string, title?: string | null, author?: string | null, rating?: number | null } } | null };
+export type FinalizeVoteMutation = { __typename?: 'Mutation', finalizeVote?: { __typename?: 'FinaliseVoteMutationResponse', code: number, success: boolean, message: string, selectedBookId: string, monthlySelection: { __typename?: 'Book', id: string, title?: string | null, author?: string | null, rating: number } } | null };
 
 export type GetCurrentUserQueryVariables = Exact<{ [key: string]: never; }>;
 

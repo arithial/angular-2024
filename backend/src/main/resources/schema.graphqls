@@ -17,8 +17,8 @@ type Book implements OrderIndex{
     isbn: String!
     title: String
     author: String
-    rating: Float
-    totalVotes: Int
+    rating: Float!
+    totalVotes: Int!
     userVote: UserVote
     selected: Boolean
     description: String
