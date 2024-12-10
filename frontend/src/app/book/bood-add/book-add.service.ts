@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {map} from 'rxjs/operators';
-import {AddBookGQL, AddBookMutation} from '../../../graphql/generated';
+import {AddBookGQL, AddBookMutation, BookMutationResponse} from '../../../graphql/generated';
 
 @Injectable({
   providedIn: 'root'
@@ -34,7 +34,7 @@ export class BookAddService {
     return this.createBookGQL.mutate(bookDetails).pipe(map(result =>
     {
       if(result.data) {
-        return result.data.addBook as AddBookMutation
+        return result.data.addBook as BookMutationResponse
       }
       return null;
     }));

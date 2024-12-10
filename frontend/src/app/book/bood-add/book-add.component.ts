@@ -1,7 +1,7 @@
 import {Component, inject} from '@angular/core';
 import {BookAddService} from './book-add.service';
 import {take} from 'rxjs';
-import {FormBuilder, FormGroup, FormsModule, Validators} from '@angular/forms'; // Import FormBuilder and Validators
+import {FormBuilder, FormGroup, FormsModule, Validators} from '@angular/forms';
 import {MatFormField, MatLabel, MatSuffix} from '@angular/material/form-field';
 import {MatInput} from '@angular/material/input';
 import {MatIcon} from '@angular/material/icon';
@@ -42,7 +42,7 @@ export class BookAddComponent {
   }
 
   constructor(private bookAddService: BookAddService, private fb: FormBuilder, private router: Router) {
-    this.form =this.fb.group({
+    this.form = this.fb.group({
       title: ['', Validators.required],
       author: ['', [Validators.required]],
       isbn: ['', [Validators.required, Validators.minLength(9), Validators.maxLength(14)]],
@@ -59,8 +59,18 @@ export class BookAddComponent {
     };
     this.bookAddService.addBook(bookDetails).subscribe({
       next: (book) => {
+        if (book) {
+          if (book.success) {
+            console.log('Book added successfully', book);
+            let s = 'book/' + book.bookId;
             this.form.reset();
-            this.router.navigate(['/books']);
+            this.router.navigate([s]);
+          } else {
+            this.handleError("Book Failed to add: " + book.message + "")
+          }
+        } else {
+          this.handleError("Book Failed to add")
+        }
       },
       error: (err) => {
         this.handleError("Book Failed to add")
