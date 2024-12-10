@@ -1,9 +1,10 @@
-import {Component} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {FormGroup, ReactiveFormsModule, FormBuilder, Validators} from '@angular/forms';
 import {MatFormField, MatLabel} from '@angular/material/form-field';
 import {MatInput} from '@angular/material/input';
 import {MatButton} from '@angular/material/button';
 import {AuthService} from '../../../services/auth.service';
+import {MatSnackBar} from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-register',
@@ -20,6 +21,15 @@ import {AuthService} from '../../../services/auth.service';
 })
 export class RegisterComponent {
   registerForm: FormGroup;
+  private _snackBar = inject(MatSnackBar);
+
+  openSnackBar(message: string) {
+    this._snackBar.open(message, "Ok", {
+      horizontalPosition: 'center',
+      verticalPosition: 'top',
+      duration: 2000,
+    });
+  }
 
   constructor(private fb: FormBuilder, private authService: AuthService) {
 
@@ -43,21 +53,20 @@ export class RegisterComponent {
     );
   }
 
-
-
-
-
-
-
   onSubmit() {
     if (this.registerForm.valid) {
       const {username,email, password} = this.registerForm.value;
       this.authService.createUser(username,email, password).subscribe({
         next: (response) => {
+          if(!response.success)
+          {
+            this.openSnackBar(response.message);
+            return;
+          }
           console.log('User registered successfully', response);
         },
-        error: (error) => {
-          console.error('Registration failed', error);
+        error: (error: Error) => {
+          this.openSnackBar(error.message);
         }
       });
     }

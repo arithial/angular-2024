@@ -1,7 +1,7 @@
 <form (ngSubmit)="onSubmit()" class="login-form">
   <mat-form-field class="example-full-width">
     <mat-label>Leave a comment</mat-label>
-    <textarea [(ngModel)]="text" name="comment" matInput maxlength="500"></textarea>
+    <textarea [(ngModel)]="text" name="comment" matInput maxlength="500" required></textarea>
   </mat-form-field>
 
   <button mat-button type="submit">

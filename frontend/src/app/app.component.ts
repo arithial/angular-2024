@@ -10,7 +10,7 @@ import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, MatIcon, MatToolbar, MatToolbarRow, MatAnchor, MatMenu, MatMenuItem, MatButton, MatMenuTrigger],
+  imports: [RouterOutlet, MatToolbar, MatToolbarRow, MatAnchor, MatMenu, MatMenuItem, MatButton, MatMenuTrigger],
   templateUrl: './app.component.html',
   standalone: true,
   styleUrl: './app.component.scss'

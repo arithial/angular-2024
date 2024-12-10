@@ -25,10 +25,10 @@ public class DataFetchersDelegatePaginatedBooksImpl implements DataFetchersDeleg
 
     @Override
     public List<Book> books(DataFetchingEnvironment dataFetchingEnvironment, PaginatedBooks origin) {
-        List<BookEntity> books = new ArrayList<>();
-        Iterable<BookEntity> allById = bookRepository.findAllById(getBookIds(origin));
-        allById.forEach(books::add);
-        return books.stream().map(util::toBook).toList();
+//        List<BookEntity> books = new ArrayList<>();
+//        Iterable<BookEntity> allById = bookRepository.findAllById(getBookIds(origin));
+//        allById.forEach(books::add);
+        return origin.getBooks();//books.stream().map(util::toBook).toList();
     }
 
     private static List<UUID> getBookIds(PaginatedBooks origin) {

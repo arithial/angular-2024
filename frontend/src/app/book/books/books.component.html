@@ -6,7 +6,14 @@
         <div class = "mini-spacer"></div>
         <div class="bc-book-list-element">
           <h4 class="bc-title" matListItemTitle>
-            <a routerLink="/book/{{book.id}}">{{ book.title }}</a>
+            @if(isAuthenticated)
+            {
+              <a routerLink="/book/{{book.id}}">{{book.title}}</a>
+            }
+            @else
+            {
+              {{book.title}}
+            }
           </h4>
           <h5 class="bc-author" matListItemLine>{{ book.author }}</h5>
         </div>

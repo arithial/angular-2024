@@ -1,8 +1,7 @@
 <mat-toolbar color="primary">
+
   <mat-toolbar-row>
-    <a mat-button href="">
-      <mat-icon  aria-label="Home">book</mat-icon>
-      BookClub</a>
+    <a mat-button href="">BookClub</a>
     <mat-menu #booksMenu="matMenu">
       <a mat-menu-item href="/books">View Books</a>
       <a mat-menu-item href="/finished">Finished Books</a>
@@ -28,11 +27,10 @@
       </mat-menu>
     </div>
     <button mat-button [matMenuTriggerFor]="userMenu">
-      <mat-icon aria-label="User">account_circle</mat-icon>
-      @if (curUser() && curUser()?.isGuest) {
-        Guest
-      } @else {
+      @if (curUser() && !curUser()?.isGuest) {
         {{ curUser()?.username }}
+      } @else {
+        Guest
       }
     </button>
   </mat-toolbar-row>
@@ -40,24 +38,3 @@
 <main class="main">
   <router-outlet/>
 </main>
-
-
-<mat-toolbar color="primary">
-
-  <mat-toolbar-row>
-    <a mat-button href="">
-      <mat-icon aria-hidden="false" aria-label="Home" fontIcon="book"></mat-icon>
-      BookClub</a>
-    <a mat-button href="/books">Books</a>
-    <a mat-button href="/finished">Finished Books</a>
-    @if (curUser() && curUser()?.isAdmin) {
-      <a mat-button href="/users">Users</a>
-    }
-    @if (!curUser() || curUser()?.isGuest) {
-      <a mat-button href="/login">Login</a>
-      <a mat-button href="/register">Register</a>
-    } @else {
-      <a mat-button href="/logout">Logout</a>
-    }
-  </mat-toolbar-row>
-</mat-toolbar>

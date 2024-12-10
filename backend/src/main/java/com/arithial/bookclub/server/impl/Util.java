@@ -1,10 +1,7 @@
 package com.arithial.bookclub.server.impl;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Logger;
 
 import com.arithial.bookclub.server.*;
@@ -13,16 +10,15 @@ import com.arithial.bookclub.server.jpa.CommentEntity;
 import com.arithial.bookclub.server.jpa.UserEntity;
 import com.arithial.bookclub.server.jpa.VoteEntity;
 import com.arithial.bookclub.server.jpa.repository.BookRepository;
+import com.arithial.bookclub.server.jpa.repository.CommentsRepository;
 import com.arithial.bookclub.server.jpa.repository.UserRepository;
 import com.arithial.bookclub.server.jpa.repository.VoteRepository;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.github.dozermapper.core.Mapper;
 
 /**
  * A Spring bean that contains various utilities
@@ -41,6 +37,8 @@ public class Util {
     private BookRepository bookRepository;
     @Resource
     private VoteRepository voteRepository;
+    @Resource
+    private CommentsRepository commentsRepository;
 
 
     @PostConstruct
@@ -73,6 +71,23 @@ public class Util {
 
     }
 
+
+    public CommentEntity createRandomComment(UserEntity user, BookEntity book) {
+        if (user == null || book == null) {
+            throw new IllegalArgumentException("User and Book must not be null.");
+        }
+
+        CommentEntity commentEntity = new CommentEntity();
+        commentEntity.setUser(user);
+        commentEntity.setBook(book);
+        commentEntity.setMessage("Comment from " + user.getUsername() + ": " + RandomStringUtils.randomAlphabetic(50));
+        commentEntity.setCreated(new Date());
+
+        commentEntity = commentsRepository.save(commentEntity);
+        logger.info("A random comment has been created and saved for user: " + user.getUsername() + " and book: " + book.getTitle());
+        return commentEntity;
+    }
+    
     private BookEntity generateDuneBook() {
         BookEntity bookEntity = new BookEntity();
         bookEntity.setIsbn("9780425027066");
@@ -116,6 +131,7 @@ public class Util {
                 voteRepository.save(vote);
                 System.out.println(username + " voted for WoT: " + vote.getApproved());
                 logger.info(username + " voted for WoT: " + vote.getApproved());
+                createRandomComment(user, book);
             }
 
         }

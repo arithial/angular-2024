@@ -31,7 +31,13 @@ export class BookAddService {
   }
 
   addBook(bookDetails: BookDetails) {
-    return this.createBookGQL.mutate(bookDetails).pipe(map(result => result.data?.addBook as AddBookMutation | null));
+    return this.createBookGQL.mutate(bookDetails).pipe(map(result =>
+    {
+      if(result.data) {
+        return result.data.addBook as AddBookMutation
+      }
+      return null;
+    }));
   }
 }
 

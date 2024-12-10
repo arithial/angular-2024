@@ -1,3 +1,12 @@
 <app-artwork isbn="{{isbn}}" size="{{size}}" title="{{title}}"></app-artwork>
-<h3><a routerLink="/book/{{bookId}}">{{title}}</a></h3>
+<h3>
+  @if(isAuthenticated)
+  {
+  <a routerLink="/book/{{bookId}}">{{title}}</a>
+  }
+  @else
+  {
+  {{title}}
+  }
+</h3>
 <h6>{{author}}</h6>

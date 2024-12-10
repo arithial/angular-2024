@@ -55,8 +55,6 @@ export class AuthService {
             this.setStorageItem(this.USER_DATA_KEY, JSON.stringify(data.user));
           } else if (data.code == HttpStatusCode.Conflict.valueOf()) {
             throw new ConflictError(data.message);
-          } else {
-
           }
       }
     );

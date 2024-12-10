@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, signal} from '@angular/core';
 import {MonthlyComponent} from '../cover/monthly/monthly.component';
 import {TopBooksComponent} from '../book/top-books/top-books.component';
 import {MatDialogTitle} from '@angular/material/dialog';
@@ -30,7 +30,7 @@ import {AuthService} from '../../services/auth.service';
 })
 export class FrontComponent implements OnInit {
 
-  isAdmin = false;
+  isAdmin = signal(false);
 
   constructor(private frontService: FrontService,
               private router: Router,
@@ -38,7 +38,7 @@ export class FrontComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.isAdmin = this.authService.currentUser().isAdmin;
+    this.isAdmin.set(this.authService.currentUser().isAdmin);
   }
 
   finalise() {

@@ -1,4 +1,5 @@
 <div class="container">
+    <h2>Details for {{bookDetails?.title}}</h2>
   <mat-card class="example-card" appearance="outlined">
     <mat-card-header>
       <mat-card-title-group>
@@ -12,9 +13,9 @@
         {
           <mat-card-subtitle>Book of the Month</mat-card-subtitle>
         }
-        @else if(userInfo)
+        @else if(bookDetails && userInfo)
         {
-          <app-vote-option bookId="{{bookDetails?.id}}"></app-vote-option>
+          <app-vote-option bookId="{{bookDetails.id}}"></app-vote-option>
         }
         <mat-divider vertical="vertical"></mat-divider>
         <app-artwork isbn="{{bookDetails?.isbn}}" size="L" title="{{bookDetails?.title}}" ></app-artwork>

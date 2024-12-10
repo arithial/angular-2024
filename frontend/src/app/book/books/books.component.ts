@@ -8,6 +8,7 @@ import {MatDivider} from '@angular/material/divider';
 import {BooksService} from './books.service';
 import {MatPaginator, PageEvent} from '@angular/material/paginator';
 import {VoteOptionComponent} from '../votes/vote-option/vote-option.component';
+import {AuthService} from '../../../services/auth.service';
 
 @Component({
   selector: 'app-books',
@@ -33,11 +34,14 @@ export class BooksComponent implements OnInit {
   pageSize: number = 10;
   totalItems: number = 0;
   currentPage: number = 0;
+  isAuthenticated = false;
 
-  constructor(private bookService: BooksService) {
+  constructor(private bookService: BooksService,
+              private authService: AuthService) {
   }
 
   ngOnInit(): void {
+    this.isAuthenticated = this.authService.isLoggedIn();
     this.updateList();
   }
 
@@ -47,13 +51,7 @@ export class BooksComponent implements OnInit {
         this.totalItems = books.total;
         this.pages = Math.ceil(books.total / this.pageSize);
         this.books = [];
-        const sortedList = books.books.sort((a, b) => {
-          if (a && b && a.totalVotes && b.totalVotes) {
-            return a.totalVotes - b.totalVotes;
-          }
-          return 0;
-        });
-        for (var book of sortedList) {
+        for (var book of books.books) {
           if (book) {
             this.books.push(book);
           }

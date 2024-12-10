@@ -24,7 +24,7 @@ public interface BookRepository extends PagingAndSortingRepository<BookEntity, U
     @Query(value = "SELECT b FROM BookEntity b where b.isbn = ?1")
     Optional<BookEntity> findByIsbn(String isbn);
 
-    @Query(value = "SELECT b FROM BookEntity b JOIN b.votes v WHERE v.approved = true AND b.complete = false AND b.read = false GROUP BY b ORDER BY COUNT(v) DESC")
+    @Query(value = "SELECT b FROM BookEntity b LEFT JOIN b.votes v WHERE b.complete = false AND b.read = false GROUP BY b ORDER BY SUM( case when v.approved=true then 1 else 0 end) DESC")
     List<BookEntity> findUnfinishedBookEntitiesByVoteCount();
 
     @Query(value = "SELECT b FROM BookEntity b ORDER BY b.created ASC ")
@@ -33,7 +33,7 @@ public interface BookRepository extends PagingAndSortingRepository<BookEntity, U
     @Query(value = "SELECT b FROM BookEntity b WHERE b.complete = true and b.read = false")
     Optional<BookEntity> findMonthly();
 
-    @Query(value = "SELECT b FROM BookEntity b JOIN b.votes v WHERE b.complete = false AND b.read = false GROUP BY b ORDER BY SUM( case when v.approved=true then 1 else 0 end) DESC")
+    @Query(value = "SELECT b FROM BookEntity b LEFT JOIN b.votes v WHERE b.complete = false AND b.read = false GROUP BY b ORDER BY SUM( case when v.approved=true then 1 else 0 end) DESC")
     List<BookEntity> findUnfinishedBookEntitiesByVoteCount(Pageable pageable);
 
     @Query(value = "SELECT COUNT(b) FROM BookEntity b WHERE b.complete = false AND b.read = false")

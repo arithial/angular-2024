@@ -1,10 +1,11 @@
+<h2>All Books</h2>
+
+<div class="all-books">
 @if(books && books.length > 0)
 {
-  <mat-grid-list cols="3" rowHeight="350px" >
   @for (book of books; track book) {
-    <mat-grid-tile style="overflow:auto;"><app-display bookId="{{book.id}}" size="M" author="{{book.author}}" title="{{book.title}}" isbn="{{book.isbn}}"></app-display></mat-grid-tile>
+    <app-display bookId="{{book.id}}" size="M" author="{{book.author}}" title="{{book.title}}" isbn="{{book.isbn}}"></app-display>
   }
-</mat-grid-list>
 } @else {
   <mat-card>
     <mat-card-title-group>
@@ -12,6 +13,7 @@
     </mat-card-title-group>
   </mat-card>
 }
+</div>
 <mat-paginator class="books-paginator"
                (page)="handlePageEvent($event)"
                [length]="totalItems"
@@ -22,3 +24,4 @@
                [pageIndex]="currentPage"
                aria-label="Select page">
 </mat-paginator>
+

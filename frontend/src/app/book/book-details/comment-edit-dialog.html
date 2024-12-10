@@ -2,10 +2,10 @@
 <mat-dialog-content>
   <mat-form-field>
     <mat-label>Comment</mat-label>
-    <textarea [(ngModel)]="comment" name="comment" matInput maxlength="500"></textarea>
+    <textarea [(ngModel)]="comment" name="comment" matInput maxlength="500" required></textarea>
   </mat-form-field>
 </mat-dialog-content>
 <mat-dialog-actions>
   <button mat-button (click)="onNoClick()">Cancel</button>
-  <button mat-button (click)="updateComment()" cdkFocusInitial>Save</button>
+  <button mat-button (click)="updateComment()">Save</button>
 </mat-dialog-actions>

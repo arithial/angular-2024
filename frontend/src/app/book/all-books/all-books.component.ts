@@ -10,8 +10,6 @@ import {MatCard, MatCardSubtitle, MatCardTitleGroup} from '@angular/material/car
   selector: 'app-finished-books',
   imports: [
     MatPaginator,
-    MatGridList,
-    MatGridTile,
     MatCardSubtitle,
     DisplayComponent,
     MatCard,

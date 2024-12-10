@@ -6,6 +6,7 @@ import {ArtworkComponent} from '../../cover/artwork/artwork.component';
 import {MatDivider} from '@angular/material/divider';
 import {TopBooksService} from './top-books.service';
 import {VoteOptionComponent} from '../votes/vote-option/vote-option.component';
+import {AuthService} from '../../../services/auth.service';
 
 @Component({
   selector: 'app-top-books',
@@ -25,11 +26,14 @@ import {VoteOptionComponent} from '../votes/vote-option/vote-option.component';
 })
 export class TopBooksComponent implements OnInit {
   books: Book[] = [];
+  isAuthenticated = false;
 
-  constructor(private topBookService: TopBooksService) {
+  constructor(private topBookService: TopBooksService,
+              private authService: AuthService) {
   }
 
   ngOnInit(): void {
+    this.isAuthenticated = this.authService.isLoggedIn();
     const topList = this.topBookService.getTopList();
     topList.then(books => {
         this.books = [];
