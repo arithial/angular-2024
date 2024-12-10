@@ -2,8 +2,13 @@
   <div class="left-side">
     <mat-card class="example-card" appearance="outlined">
       <mat-card-header>
-        <mat-card-title >Monthly Read</mat-card-title>
+        <mat-card-title>Monthly Read</mat-card-title>
         <mat-card-subtitle>Book Voted for Next Read</mat-card-subtitle>
+        @if (isAdmin) {
+          <button on-click="finalise()" mat-icon-button aria-label="Finalise Vote">
+            <mat-icon style="color:green;">thumb_up_alt</mat-icon>
+          </button>
+        }
       </mat-card-header>
       <mat-card-content>
         <app-monthly></app-monthly>

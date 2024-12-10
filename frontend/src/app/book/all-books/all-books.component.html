@@ -1,10 +1,10 @@
 @if(books && books.length > 0)
 {
   <mat-grid-list cols="3" rowHeight="350px" >
-    @for (book of books; track book) {
-      <mat-grid-tile style="overflow:auto;"><app-display bookId="{{book.id}}" size="M" author="{{book.author}}" title="{{book.title}}" isbn="{{book.isbn}}"></app-display></mat-grid-tile>
-    }
-  </mat-grid-list>
+  @for (book of books; track book) {
+    <mat-grid-tile style="overflow:auto;"><app-display bookId="{{book.id}}" size="M" author="{{book.author}}" title="{{book.title}}" isbn="{{book.isbn}}"></app-display></mat-grid-tile>
+  }
+</mat-grid-list>
 } @else {
   <mat-card>
     <mat-card-title-group>

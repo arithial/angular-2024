@@ -2,14 +2,15 @@ import {Component, effect, OnChanges, OnInit, signal, SimpleChanges, WritableSig
 import {RouterOutlet} from '@angular/router';
 
 import {MatToolbar, MatToolbarRow} from '@angular/material/toolbar';
-import {MatAnchor} from '@angular/material/button';
+import {MatAnchor, MatButton} from '@angular/material/button';
 import {MatIcon} from '@angular/material/icon';
-import {AuthService, authSignal} from '../services/auth.service';
+import {AuthService, authSignal, GUEST_USER, UserInfo} from '../services/auth.service';
 import {User} from '../graphql/generated';
+import {MatMenu, MatMenuItem, MatMenuTrigger} from '@angular/material/menu';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, MatIcon, MatToolbar, MatToolbarRow, MatAnchor],
+  imports: [RouterOutlet, MatIcon, MatToolbar, MatToolbarRow, MatAnchor, MatMenu, MatMenuItem, MatButton, MatMenuTrigger],
   templateUrl: './app.component.html',
   standalone: true,
   styleUrl: './app.component.scss'
@@ -17,7 +18,7 @@ import {User} from '../graphql/generated';
 
 export class AppComponent {
   title = "BookCover";
-  curUser: WritableSignal<User | null> = signal(null);
+  curUser: WritableSignal<UserInfo | null> = signal(null);
   authSignal = authSignal;
 
   constructor(private authService: AuthService) {
@@ -26,8 +27,8 @@ export class AppComponent {
       if (!authSignal()) {
         console.log("authSignal")
         this.curUser.set(null);
-      } else if(!this.curUser()) {
-         this.updateCurUser();
+      } else if (!this.curUser()) {
+        this.updateCurUser();
       }
     });
   }

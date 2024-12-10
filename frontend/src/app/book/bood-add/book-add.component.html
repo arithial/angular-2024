@@ -1,0 +1,32 @@
+<div>
+  <h2>Add Book</h2>
+  <form class="book-form" (ngSubmit)="submitForm()">
+    <mat-form-field appearance="fill">
+      <mat-label>Title</mat-label>
+      <input matInput id="title" name="title" [(ngModel)]="title" [readonly]="true" required>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Author</mat-label>
+      <input matInput id="author" name="author" [readonly]="true" [(ngModel)]="author" required>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Description</mat-label>
+      <input matInput id="description" name="description" [readonly]="true" [(ngModel)]="description" required>
+    </mat-form-field>
+    <!--  <div class="isbn-field">-->
+    <mat-form-field appearance="fill">
+      <mat-label>ISBN</mat-label>
+      <input matInput id="isbn" name="isbn" placeholder="Enter ISBN" [(ngModel)]="isbn" required>
+      <button mat-icon-button matSuffix type="button" aria-label="Search" (click)="loadBookData()">
+        <mat-icon>search</mat-icon>
+      </button>
+    </mat-form-field>
+
+    <!--  </div>-->
+
+    <button mat-raised-button type="submit">Submit</button>
+    <button mat-button type="reset">Reset</button>
+  </form>
+</div>

@@ -27,7 +27,7 @@ export class BookDetailsService {
       console.log(result.data);
       return result.data?.book;
     }));
-    return firstValueFrom(bookQuery as Observable<Book>);
+    return bookQuery as Observable<Book>;
   }
 
   getCommentsForBook(bookId: string, page: number, limit: number) : Observable<PaginatedComments> {

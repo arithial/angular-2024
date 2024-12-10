@@ -6,6 +6,22 @@ main {
   position: relative;
 }
 
+.spacer {
+  width: 100%;
+}
+
+.user-menu
+{
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: 100%;
+  min-width: 150px;
+  height: 100%;
+  margin-right: 16px;
+  position: relative;
+}
+
 @media screen and (max-width: 650px) {
   .content {
     flex-direction: column;

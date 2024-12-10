@@ -33,11 +33,11 @@ export class CommentFormService {
 
   updateComment(commentId: string, newText: string) {
     if (this.authService.isLoggedIn()) {
-      var addCommentQuery = this.updateCommentGQL.mutate({
+      var updateCommentQuery = this.updateCommentGQL.mutate({
         commentId:commentId,
         newText:newText
       });
-      return addCommentQuery.pipe(map(result => result.data?.updateComment as VoteMutationResponse | null));
+      return updateCommentQuery.pipe(map(result => result.data?.updateComment as VoteMutationResponse | null));
     }
     return EMPTY;
   }

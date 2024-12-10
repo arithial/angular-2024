@@ -5,6 +5,7 @@ import {AuthService} from '../../../../services/auth.service';
 import {MatIcon} from '@angular/material/icon';
 import {MatIconButton} from '@angular/material/button';
 import {BookDetailsService} from '../../book-details/book-details.service';
+import {take} from 'rxjs';
 
 @Component({
   selector: 'app-vote-option',
@@ -58,7 +59,7 @@ export class VoteOptionComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-      this.bookDetailService.getBook(this.bookId).then((book) => this.userVote = book.userVote as UserVote | null);
+    this.bookDetailService.getBook(this.bookId).pipe(take(1)).subscribe((book) => this.userVote = book.userVote as UserVote | null);
   }
 
 }

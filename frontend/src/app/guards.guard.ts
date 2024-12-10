@@ -15,6 +15,7 @@ export class LoggedInGuard implements CanActivate {
     if (this.authService.isLoggedIn()) {
       return true;
     } else {
+      this.router.navigate(['/']);
       return false;
     }
   }
@@ -30,6 +31,7 @@ export class GuestOnlyGuard implements CanActivate {
 
   canActivate(): boolean {
     if (this.authService.isLoggedIn()) {
+      this.router.navigate(['/']);
       return false;
     } else {
       return true;

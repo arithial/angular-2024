@@ -1,13 +1,15 @@
-import {computed, Injectable, OnInit, output, signal, WritableSignal} from '@angular/core';
+import {Injectable, signal} from '@angular/core';
 import {
-  GetCurrentUserGQL, LoginResponse,
+  GetCurrentUserGQL,
+  LoginResponse,
   LoginUserGQL,
-  RegisterUserGQL, User,
+  RegisterUserGQL,
+  User,
   UserMutationResponse
 } from '../graphql/generated';
 import {map} from 'rxjs/operators';
 import {HttpStatusCode} from '@angular/common/http';
-import {firstValueFrom, Observable} from 'rxjs';
+import {firstValueFrom, Observable, pipe, take} from 'rxjs';
 
 class ConflictError implements Error {
   constructor(message: string) {
@@ -25,7 +27,7 @@ export const AUTH_TOKEN_KEY = 'AUTH_TOKEN_KEY';
 @Injectable({
   providedIn: 'root'
 })
-export class AuthService  {
+export class AuthService {
   private readonly USER_DATA_KEY = 'USER_Data';
 
 
@@ -37,8 +39,8 @@ export class AuthService  {
   }
 
 
-  private createUser(username: string, email: string, password: string) {
-    var registerQuery = this.registerGQL.mutate({
+  createUser(username: string, email: string, password: string) {
+    let registerQuery = this.registerGQL.mutate({
       user: {
         username: username,
         email: email,
@@ -62,7 +64,7 @@ export class AuthService  {
   }
 
   login(username: string, password: string) {
-    var loginTokenQuery = this.loginGQL.fetch({
+    let loginTokenQuery = this.loginGQL.fetch({
       password: password,
       username: username
     }).pipe(map(result => result.data?.loginToken));
@@ -80,8 +82,15 @@ export class AuthService  {
   private setUserSession(userId: string) {
 
     this.setStorageItem(AUTH_TOKEN_KEY, userId);
-    this.currentUserPromise().then(result => {
-      this.setStorageItem(this.USER_DATA_KEY, JSON.stringify(result));
+    this.currentUserObservable().subscribe(result => {
+      let userData: UserInfo = {
+        id: result.id,
+        username: result.username,
+        email: result.email,
+        isAdmin: result.isAdmin === true,
+        isGuest: false
+      }
+      this.setStorageItem(this.USER_DATA_KEY, JSON.stringify(userData));
       authSignal.set(true);
     })
   }
@@ -95,9 +104,8 @@ export class AuthService  {
   }
 
   isLoggedIn(): boolean {
-    var authToken = this.getToken();
-    var output = !!authToken;
-    return output;
+    let authToken = this.getToken();
+    return !!authToken;
   }
 
   getToken(): string | null {
@@ -111,16 +119,32 @@ export class AuthService  {
     authSignal.set(false);
   }
 
-  private currentUserPromise() {
-    var result = this.getUserGQL.fetch().pipe(map(result => result.data.currentUser));
-    return firstValueFrom(result as Observable<User>);
+  private currentUserObservable() {
+    let result = this.getUserGQL.fetch().pipe(map(result => result.data.currentUser)).pipe(take(1));
+    return result as Observable<User>;
   }
 
   currentUser() {
-    var userData = sessionStorage.getItem(this.USER_DATA_KEY);
-    if(userData) {
-       return JSON.parse(userData) as User
+    let userData = sessionStorage.getItem(this.USER_DATA_KEY);
+    if (userData) {
+      return JSON.parse(userData) as UserInfo
     }
-    return null;
+    return GUEST_USER;
   }
+}
+
+export interface UserInfo {
+  id: string;
+  username: string;
+  email: string;
+  isAdmin: boolean;
+  isGuest: boolean;
+}
+
+export const GUEST_USER: UserInfo = {
+  id: "",
+  username: "",
+  email: "",
+  isAdmin: false,
+  isGuest: true
 }

@@ -47,7 +47,13 @@ export class BooksComponent implements OnInit {
         this.totalItems = books.total;
         this.pages = Math.ceil(books.total / this.pageSize);
         this.books = [];
-        for (var book of books.books) {
+        const sortedList = books.books.sort((a, b) => {
+          if (a && b && a.totalVotes && b.totalVotes) {
+            return a.totalVotes - b.totalVotes;
+          }
+          return 0;
+        });
+        for (var book of sortedList) {
           if (book) {
             this.books.push(book);
           }
@@ -57,7 +63,7 @@ export class BooksComponent implements OnInit {
   }
 
   handlePageEvent(e: PageEvent) {
-     this.currentPage = e.pageIndex;
-     this.updateList();
+    this.currentPage = e.pageIndex;
+    this.updateList();
   }
 }

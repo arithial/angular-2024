@@ -1,4 +1,12 @@
-import {Component, effect, OnChanges, OnInit, Signal, signal, SimpleChanges} from '@angular/core';
+import {
+  Component,
+  inject,
+  model,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  SimpleChanges
+} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {Comment, Book, User} from '../../../graphql/generated';
 import {ArtworkComponent} from '../../cover/artwork/artwork.component';
@@ -22,6 +30,19 @@ import {VoteOptionComponent} from '../votes/vote-option/vote-option.component';
 import {CommentComponent} from '../comments/comment/comment.component';
 import {CommentFormComponent} from '../comments/comment-form/comment-form.component';
 import {MatPaginator, PageEvent} from '@angular/material/paginator';
+import {
+  MAT_DIALOG_DATA,
+  MatDialog, MatDialogActions,
+  MatDialogContent,
+  MatDialogRef,
+  MatDialogTitle
+} from '@angular/material/dialog';
+import {MatButton} from '@angular/material/button';
+import {MatFormField, MatLabel} from '@angular/material/form-field';
+import {MatInput} from '@angular/material/input';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {CommentFormService} from '../comments/comment-form/comment-form.service';
+import {Subscription, take} from 'rxjs';
 
 
 @Component({
@@ -47,7 +68,7 @@ import {MatPaginator, PageEvent} from '@angular/material/paginator';
   standalone: true,
   styleUrl: './book-details.component.scss'
 })
-export class BookDetailsComponent implements OnInit, OnChanges {
+export class BookDetailsComponent implements OnInit, OnChanges, OnDestroy {
   bookDetails: Book | null = null;
   userInfo: User | null = null;
   selectedId: string | null = null;
@@ -57,11 +78,13 @@ export class BookDetailsComponent implements OnInit, OnChanges {
   panelOpenState = false;
   comments: Comment[] | null = [];
   totalItems: number = 0;
+  readonly dialog = inject(MatDialog);
+  subscription: Subscription | null = null;
 
   private updateComments() {
     if (this.panelOpenState && this.selectedId != null) {
       console.log("comments fetch")
-      var sub = this.bookService.getCommentsForBook(this.selectedId, this.page, this.pageSize).subscribe({
+      this.bookService.getCommentsForBook(this.selectedId, this.page, this.pageSize).pipe(take(1)).subscribe({
         next: (page) => {
           console.log("comments fetch parsing")
           this.totalPages = Math.ceil(page.total / this.pageSize);
@@ -92,39 +115,28 @@ export class BookDetailsComponent implements OnInit, OnChanges {
               private authService: AuthService) {
   }
 
-  random() {
-    var length = 10;
-    var randomChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-    var result = '';
-
-    for (var i = 0; i < length; i++) {
-
-      result += randomChars.charAt(Math.floor(Math.random() * randomChars.length));
-
-    }
-
-    return result;
-
-
-  }
-
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
+    this.subscription = this.route.paramMap.subscribe(params => {
       this.selectedId = params.get('id');
       console.log(this.selectedId);
+      if (this.selectedId != null) {
+        let bookQuery = this.bookService.getBook(this.selectedId);
+        bookQuery.pipe(take(1)).subscribe(
+          {
+            next: (book) => {
+              this.bookDetails = book as Book;
+            },
+            error: (error) => {
+              console.log(error);
+            }
+          }
+        );
+        this.userInfo = this.authService.currentUser();
+      } else {
+        this.router.navigate(['404']);
+      }
     });
-    if (this.selectedId != null) {
-      var bookQuery = this.bookService.getBook(this.selectedId);
-      bookQuery.then(
-        (book) => {
-          this.bookDetails = book as Book;
-        })
-      this.userInfo = this.authService.currentUser();
-    } else {
-      this.router.navigate(['404']);
-    }
   }
 
   refreshComments($event: boolean) {
@@ -133,7 +145,16 @@ export class BookDetailsComponent implements OnInit, OnChanges {
   }
 
   updateComment($event: Comment) {
-    // dialog
+    const dialogRef = this.dialog.open(CommentEditDialog, {
+      data: {
+        comment: $event
+      }
+    });
+    dialogRef.afterClosed().pipe(take(1)).subscribe(result => {
+      if (result === true) {
+        this.updateComments();
+      }
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -149,5 +170,58 @@ export class BookDetailsComponent implements OnInit, OnChanges {
   panelOpen(b: boolean) {
     this.panelOpenState = b;
     this.updateComments();
+  }
+
+  ngOnDestroy(): void {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
+  }
+
+}
+
+export interface DialogData {
+  comment: Comment;
+}
+
+@Component({
+  selector: 'comment-edit-dialog',
+  templateUrl: 'comment-edit-dialog.html',
+  imports: [
+    MatDialogTitle,
+    MatButton,
+    MatDialogContent,
+    MatFormField,
+    MatInput,
+    MatLabel,
+    ReactiveFormsModule,
+    FormsModule,
+    MatDialogActions
+  ],
+  standalone: true
+})
+export class CommentEditDialog {
+  readonly dialogRef = inject(MatDialogRef<CommentEditDialog>);
+  readonly data = inject<DialogData>(MAT_DIALOG_DATA);
+  readonly comment = model(this.data.comment.text);
+
+  constructor(private commentService: CommentFormService,) {
+  }
+
+  onNoClick(): void {
+    this.dialogRef.close(false);
+  }
+
+  updateComment() {
+    console.log("comment update " + this.comment())
+    this.commentService.updateComment(this.data.comment.id, this.comment()).pipe(take(1)).subscribe({
+      next: (comment) => {
+        this.dialogRef.close(true);
+      },
+      error: (error) => {
+        console.log(error);
+      }
+    })
+
   }
 }
